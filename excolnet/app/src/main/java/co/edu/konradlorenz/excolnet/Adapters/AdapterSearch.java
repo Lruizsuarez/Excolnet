@@ -22,7 +22,7 @@ import co.edu.konradlorenz.excolnet.Entities.Usuario;
 import co.edu.konradlorenz.excolnet.R;
 
 public class AdapterSearch extends RecyclerView.Adapter<AdapterSearch.MyViewHolder> {
-    ArrayList<Usuario> list;
+    private ArrayList<Usuario> list;
     private Context context;
     private LinearLayout friendSearched;
     private View view;

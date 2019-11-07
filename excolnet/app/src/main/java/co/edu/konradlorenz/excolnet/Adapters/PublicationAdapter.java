@@ -24,6 +24,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Objects;
 
 import co.edu.konradlorenz.excolnet.Activities.DetailPublicationActivity;
 import co.edu.konradlorenz.excolnet.Activities.ProfileActivity;
@@ -48,21 +49,13 @@ public class PublicationAdapter extends RecyclerView.Adapter<PublicationAdapter.
         this.user = user;
     }
 
-    public ArrayList<Publicacion> getItems() {
-        return items;
-    }
-
-    public void setItems(ArrayList<Publicacion> items) {
-        this.items = items;
-    }
 
     @NonNull
     @Override
     public PublicationHolder onCreateViewHolder(@NonNull final ViewGroup parent, int viewType) {
         view = LayoutInflater.from(parent.getContext()).inflate(R.layout.adapter_publication, parent, false);
         findMaterialElements();
-        PublicationHolder pvh = new PublicationHolder(view);
-        return pvh;
+        return new PublicationHolder(view);
 
     }
 
@@ -76,9 +69,9 @@ public class PublicationAdapter extends RecyclerView.Adapter<PublicationAdapter.
         holder.nombreUsuario.setText(items.get(position).getUsuario().getDisplayName());
         holder.fechaPublicacion.setText(items.get(position).getFechaPublicacion());
         holder.descripcionPublicacion.setText(items.get(position).getTexto());
-        for (Usuario usuario: items.get(position).getUsuariosQueGustan()){
-            if(usuario.getUid()==user.getUid()){
-                Log.e("juan", "local "+usuario.getUid()+" bd "+user.getUid());
+        for (Usuario usuario : items.get(position).getUsuariosQueGustan()) {
+            if (usuario.getUid().equals(user.getUid())) {
+                Log.e("juan", "local " + usuario.getUid() + " bd " + user.getUid());
                 holder.botonLike.setImageResource(R.drawable.ic_like_selected);
             }
         }
@@ -100,8 +93,19 @@ public class PublicationAdapter extends RecyclerView.Adapter<PublicationAdapter.
                     String pattern = "yyyy-MM-dd";
                     SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
                     String date = simpleDateFormat.format(new Date());
-                    Usuario newUser = new Usuario(user.getDisplayName(), user.getEmail(), user.getPhotoUrl().toString(), user.getUid());
-                    items.get(position).getComentarios().add(new Comentario(newUser, holder.comentario.getText().toString(), date));
+                    Usuario newUser = new Usuario.Builder()
+                            .displayName(user.getDisplayName())
+                            .email(user.getEmail())
+                            .photoUrl(Objects.requireNonNull(user.getPhotoUrl()).toString())
+                            .uid(user.getUid())
+                            .create();
+
+                    items.get(position).getComentarios().add(new Comentario.Builder()
+                            .usuario(newUser)
+                            .texto(holder.comentario.getText().toString())
+                            .fechaComentario(date)
+                            .create());
+
                     DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference("BaseDatos");
                     mDatabase.child("Publicaciones").child(items.get(position).getId()).setValue(items.get(position));
                     holder.comentario.setText("");
@@ -114,22 +118,27 @@ public class PublicationAdapter extends RecyclerView.Adapter<PublicationAdapter.
             public void onClick(View v) {
                 boolean likeado = false;
                 Usuario userDislike = null;
-                for (Usuario usuario: items.get(position).getUsuariosQueGustan()){
-                    if(usuario.getUid()==user.getUid()){
+                for (Usuario usuario : items.get(position).getUsuariosQueGustan()) {
+                    if (usuario.getUid() == user.getUid()) {
                         likeado = true;
                         userDislike = usuario;
                     }
                 }
-                if (likeado){
+                if (likeado) {
                     DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference("BaseDatos");
                     items.get(position).getUsuariosQueGustan().remove(userDislike);
                     mDatabase.child("Publicaciones").child(items.get(position).getId()).setValue(items.get(position));
 
                 } else {
                     DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference("BaseDatos");
-                    items.get(position).getUsuariosQueGustan().add(new Usuario(user.getDisplayName(),user.getEmail(),user.getPhotoUrl().toString(),user.getUid()));
+                    items.get(position).getUsuariosQueGustan().add(new Usuario.Builder()
+                            .displayName(user.getDisplayName())
+                            .email(user.getEmail())
+                            .photoUrl(Objects.requireNonNull(user.getPhotoUrl()).toString())
+                            .uid(user.getUid())
+                            .create());
                     mDatabase.child("Publicaciones").child(items.get(position).getId()).setValue(items.get(position));
-            }
+                }
             }
         });
 
@@ -165,7 +174,7 @@ public class PublicationAdapter extends RecyclerView.Adapter<PublicationAdapter.
     }
 
 
-    public static class PublicationHolder extends RecyclerView.ViewHolder {
+    static class PublicationHolder extends RecyclerView.ViewHolder {
         ImageView fotoUsuario;
         TextView nombreUsuario;
         TextView fechaPublicacion;

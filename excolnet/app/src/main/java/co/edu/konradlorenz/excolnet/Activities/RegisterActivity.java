@@ -28,6 +28,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
 
 import java.io.IOException;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -67,10 +68,10 @@ public class RegisterActivity extends AppCompatActivity {
         emailTextInput.setError(null);
         passwordTextInput.setError(null);
 
-        String usermame = usernameTextInput.getText().toString().trim();
-        String lastname = lastnameTextInput.getText().toString().trim();
-        String emailAdress = emailTextInput.getText().toString().trim();
-        String password = passwordTextInput.getText().toString().trim();
+        String usermame = Objects.requireNonNull(usernameTextInput.getText()).toString().trim();
+        String lastname = Objects.requireNonNull(lastnameTextInput.getText()).toString().trim();
+        String emailAdress = Objects.requireNonNull(emailTextInput.getText()).toString().trim();
+        String password = Objects.requireNonNull(passwordTextInput.getText()).toString().trim();
 
 
         boolean cancel = false;
@@ -121,7 +122,7 @@ public class RegisterActivity extends AppCompatActivity {
         }
 
 
-        final String userCompleteName = usernameTextInput.getText().toString().trim() + " " + lastnameTextInput.getText().toString().trim();
+        final String userCompleteName = Objects.requireNonNull(usernameTextInput.getText()).toString().trim() + " " + Objects.requireNonNull(lastnameTextInput.getText()).toString().trim();
 
         if (cancel) {
             // There was an error; don't attempt login and focus the first
@@ -147,6 +148,7 @@ public class RegisterActivity extends AppCompatActivity {
                                 .setPhotoUri(selectedImage)
                                 .build();
 
+                        assert user != null;
                         user.updateProfile(profileUpdates)
                                 .addOnCompleteListener(new OnCompleteListener<Void>() {
                                     @Override
@@ -159,7 +161,7 @@ public class RegisterActivity extends AppCompatActivity {
 
 
                     } else {
-                        Toast.makeText(RegisterActivity.this, task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(RegisterActivity.this, Objects.requireNonNull(task.getException()).getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 }
             });
@@ -207,6 +209,7 @@ public class RegisterActivity extends AppCompatActivity {
         switch (requestCode) {
             case PICK_IMAGE_REQUEST:
                 if (resultCode == RESULT_OK) {
+                    assert data != null;
                     selectedImage = data.getData();
 
                     try {
@@ -232,12 +235,7 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     protected boolean isEmailValid(String email) {
-        if (email.contains("@") && email.contains(".")) {
-            return true;
-        } else {
-            return false;
-        }
-
+        return email.contains("@") && email.contains(".");
     }
 
 

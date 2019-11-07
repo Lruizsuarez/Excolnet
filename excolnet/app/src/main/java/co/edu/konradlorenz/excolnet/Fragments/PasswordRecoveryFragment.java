@@ -60,18 +60,18 @@ public class PasswordRecoveryFragment extends Fragment {
     }
 
     private void obtenerElementosLayout() {
-        email_text = (EditText) getView().findViewById(R.id.email_text);
-        back_button = (ConstraintLayout) getView().findViewById(R.id.back_button);
-        reset_password_button = (Button) getView().findViewById(R.id.reset_password_button);
+        email_text = getView().findViewById(R.id.email_text);
+        back_button = getView().findViewById(R.id.back_button);
+        reset_password_button = getView().findViewById(R.id.reset_password_button);
         mProgressView = getView().findViewById(R.id.login_progress);
         form_password = getView().findViewById(R.id.form_password);
         email_text.requestFocus();
     }
 
     private void closePasswordRecoveryWindow() {
-        FragmentManager manager = ((Fragment) PasswordRecoveryFragment.this).getFragmentManager();
+        FragmentManager manager = (PasswordRecoveryFragment.this).getFragmentManager();
         FragmentTransaction trans = manager.beginTransaction();
-        trans.remove((Fragment) PasswordRecoveryFragment.this);
+        trans.remove(PasswordRecoveryFragment.this);
         trans.commit();
     }
 

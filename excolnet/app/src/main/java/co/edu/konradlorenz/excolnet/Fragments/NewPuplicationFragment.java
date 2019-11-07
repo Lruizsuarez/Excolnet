@@ -49,6 +49,7 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Objects;
 
 import co.edu.konradlorenz.excolnet.Entities.Publicacion;
 import co.edu.konradlorenz.excolnet.Entities.Usuario;
@@ -64,7 +65,6 @@ public class NewPuplicationFragment extends Fragment {
     private static final String TAG = "GalleryFragment";
 
 
-    //widgets
     private GridView gridView;
     private ImageView galleryImage;
     private ProgressBar mProgressBar;
@@ -77,7 +77,6 @@ public class NewPuplicationFragment extends Fragment {
     private Button sendButton;
     private EditText textPublication;
     private DatabaseReference mDatabase;
-    Publicacion nuevaPublicacion;
 
     private String texto = "";
 
@@ -86,7 +85,6 @@ public class NewPuplicationFragment extends Fragment {
     private SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
     private String date = simpleDateFormat.format(new Date());
 
-    //vars
     private ArrayList<String> directories;
     private String mAppend = "file:/";
     private String mSelectedImage;
@@ -107,7 +105,7 @@ public class NewPuplicationFragment extends Fragment {
     private void startAnimations() {
         Animation anim = AnimationUtils.loadAnimation(getActivity(), R.anim.in_from_bottom);
         anim.reset();
-        CardView l = (CardView) getView().findViewById(R.id.card);
+        CardView l = getView().findViewById(R.id.card);
         l.clearAnimation();
         l.startAnimation(anim);
     }
@@ -118,7 +116,8 @@ public class NewPuplicationFragment extends Fragment {
         FirebaseUser user = mAuth.getCurrentUser();
         storage = FirebaseStorage.getInstance();
 
-        userImage = getView().findViewById(R.id.user_image);
+        userImage = Objects.requireNonNull(getView()).findViewById(R.id.user_image);
+        assert user != null;
         Glide.with(this).load(user.getPhotoUrl()).into(userImage);
         userName = getView().findViewById(R.id.user_name);
         cerrar = getView().findViewById(R.id.cerrar);
@@ -134,7 +133,7 @@ public class NewPuplicationFragment extends Fragment {
         agregarFoto.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                menuFoto = getView().findViewById(R.id.agregar_imagen);
+                menuFoto = Objects.requireNonNull(getView()).findViewById(R.id.agregar_imagen);
                 menuFoto.setVisibility(View.VISIBLE);
                 previsual = getView().findViewById(R.id.previsual);
                 previsual.setVisibility(View.VISIBLE);
@@ -161,8 +160,6 @@ public class NewPuplicationFragment extends Fragment {
 
     private void crearPublicacion() {
         texto = textPublication.getText().toString();
-        //String imagen = "https://firebasestorage.googleapis.com/v0/b/excolnet.appspot.com/o/23722736_10210496487357606_4915684129591806692_n.jpg?alt=media&token=ca4ebff1-5b8e-44ae-8dc3-95024978ce75";
-
 
         id = mDatabase.push().getKey();
         pattern = "yyyy-MM-dd";
@@ -170,20 +167,25 @@ public class NewPuplicationFragment extends Fragment {
         date = simpleDateFormat.format(new Date());
 
         if (!TextUtils.isEmpty(texto)) {
-            usuario = new Usuario(mAuth.getCurrentUser().getDisplayName(), mAuth.getCurrentUser().getEmail(), mAuth.getCurrentUser().getPhotoUrl().toString(), mAuth.getCurrentUser().getUid());
+            usuario = new Usuario.Builder()
+                    .displayName(Objects.requireNonNull(mAuth.getCurrentUser()).getDisplayName())
+                    .email(mAuth.getCurrentUser().getEmail())
+                    .photoUrl(Objects.requireNonNull(mAuth.getCurrentUser().getPhotoUrl()).toString())
+                    .uid(mAuth.getCurrentUser().getUid())
+                    .create();
+
             Uri file = Uri.fromFile(new File(mSelectedImage));
             publicationReference = storage.getReference("Publication_reference");
             final StorageReference reference = publicationReference.child(file.getLastPathSegment());
             UploadTask uploadTask = reference.putFile(file);
 
-            Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
+            uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
                 @Override
                 public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
                     if (!task.isSuccessful()) {
-                        throw task.getException();
+                        throw Objects.requireNonNull(task.getException());
                     }
 
-                    // Continue with the task to get the download URL
                     return reference.getDownloadUrl();
                 }
             }).addOnCompleteListener(new OnCompleteListener<Uri>() {
@@ -192,19 +194,21 @@ public class NewPuplicationFragment extends Fragment {
                     if (task.isSuccessful()) {
                         // restartAdapter();
                         Uri downloadUri = task.getResult();
-                        nuevaPublicacion = new Publicacion(id, usuario, texto, date, downloadUri.toString());
-                        mDatabase.child("BaseDatos").child("Publicaciones").child(id).setValue(nuevaPublicacion);
 
-                    } else {
-                        // Handle failures
-                        // ...
+                        mDatabase.child("BaseDatos").child("Publicaciones").child(id).setValue(new Publicacion.Builder()
+                                .id(id)
+                                .usuario(usuario)
+                                .texto(texto)
+                                .fechaPublicacion(date)
+                                .imagen(downloadUri.toString())
+                                .create());
                     }
                 }
             });
             closePasswordRecoveryWindow();
 
         } else {
-            Snackbar.make(getView(), "Error.", Snackbar.LENGTH_SHORT).show();
+            Snackbar.make(Objects.requireNonNull(getView()), "Error.", Snackbar.LENGTH_SHORT).show();
         }
     }
 
@@ -212,7 +216,7 @@ public class NewPuplicationFragment extends Fragment {
     private void closePasswordRecoveryWindow() {
         Animation anim = AnimationUtils.loadAnimation(getActivity(), R.anim.out_to_bottom);
         anim.reset();
-        CardView l = (CardView) getView().findViewById(R.id.card);
+        CardView l = getView().findViewById(R.id.card);
         l.clearAnimation();
         l.startAnimation(anim);
         anim.setAnimationListener(new Animation.AnimationListener() {
@@ -223,9 +227,9 @@ public class NewPuplicationFragment extends Fragment {
 
             @Override
             public void onAnimationEnd(Animation animation) {
-                FragmentManager manager = ((Fragment) NewPuplicationFragment.this).getFragmentManager();
+                FragmentManager manager = (NewPuplicationFragment.this).getFragmentManager();
                 FragmentTransaction trans = manager.beginTransaction();
-                trans.remove((Fragment) NewPuplicationFragment.this);
+                trans.remove(NewPuplicationFragment.this);
                 trans.commit();
             }
 
@@ -241,14 +245,14 @@ public class NewPuplicationFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_new_puplication, container, false);
-        galleryImage = (ImageView) view.findViewById(R.id.galleryImageView);
-        gridView = (GridView) view.findViewById(R.id.gridView);
-        directorySpinner = (Spinner) view.findViewById(R.id.spinnerDirectory);
-        mProgressBar = (ProgressBar) view.findViewById(R.id.progressBar);
+        galleryImage = view.findViewById(R.id.galleryImageView);
+        gridView = view.findViewById(R.id.gridView);
+        directorySpinner = view.findViewById(R.id.spinnerDirectory);
+        mProgressBar = view.findViewById(R.id.progressBar);
         mProgressBar.setVisibility(View.GONE);
         directories = new ArrayList<>();
 
-        ImageView shareClose = (ImageView) view.findViewById(R.id.ivCloseShare);
+        ImageView shareClose = view.findViewById(R.id.ivCloseShare);
         shareClose.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -264,7 +268,6 @@ public class NewPuplicationFragment extends Fragment {
     private void init() {
         FilePaths filePaths = new FilePaths();
 
-        //check for other folders indide "/storage/emulated/0/pictures"
         if (FileSearch.getDirectoryPaths(filePaths.PICTURES) != null) {
             directories = FileSearch.getDirectoryPaths(filePaths.PICTURES);
         }
@@ -277,7 +280,7 @@ public class NewPuplicationFragment extends Fragment {
             directoryNames.add(string);
         }
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(),
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(Objects.requireNonNull(getActivity()),
                 android.R.layout.simple_spinner_item, directoryNames);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         directorySpinner.setAdapter(adapter);
@@ -299,16 +302,13 @@ public class NewPuplicationFragment extends Fragment {
         Log.d(TAG, "setupGridView: directory chosen: " + selectedDirectory);
         final ArrayList<String> imgURLs = FileSearch.getFilePaths(selectedDirectory);
 
-        //set the grid column width
         int gridWidth = getResources().getDisplayMetrics().widthPixels;
         int imageWidth = gridWidth / NUM_GRID_COLUMNS;
         gridView.setColumnWidth(imageWidth);
 
-        //use the grid adapter to adapter the images to gridview
         GridImageAdapter adapter = new GridImageAdapter(getActivity(), R.layout.layout_grid_imageview, mAppend, imgURLs);
         gridView.setAdapter(adapter);
 
-        //set the first image to be displayed when the activity fragment view is inflated
         try {
             setImage(imgURLs.get(0), galleryImage, mAppend);
             mSelectedImage = imgURLs.get(0);
@@ -334,7 +334,7 @@ public class NewPuplicationFragment extends Fragment {
 
         ImageLoader imageLoader = ImageLoader.getInstance();
 
-        imageLoader.init(ImageLoaderConfiguration.createDefault(getActivity()));
+        imageLoader.init(ImageLoaderConfiguration.createDefault(Objects.requireNonNull(getActivity())));
 
         imageLoader.displayImage(append + imgURL, image, new ImageLoadingListener() {
             @Override

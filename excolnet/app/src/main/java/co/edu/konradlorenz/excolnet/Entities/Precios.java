@@ -29,11 +29,9 @@ public class Precios {
     }
 
 
-
     public void setAverage_price(int average_price) {
         this.average_price = average_price;
     }
-
 
 
     public void setHighest_price(int highest_price) {

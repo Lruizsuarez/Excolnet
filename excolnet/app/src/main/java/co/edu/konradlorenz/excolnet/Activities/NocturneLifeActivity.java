@@ -33,7 +33,6 @@ public class NocturneLifeActivity extends AppCompatActivity {
 
     private RecyclerView  nocturneList;
     private Toolbar  toolbar;
-    private FirebaseAuth  myAuth;
     private DatabaseReference dataRef;
     private DatabaseReference database;
     private ArrayList<Interes> intereses;
@@ -65,10 +64,8 @@ public class NocturneLifeActivity extends AppCompatActivity {
     }
 
     public void getFirebaseComponents(){
-        this.myAuth = FirebaseAuth.getInstance();
         this.database = FirebaseDatabase.getInstance().getReference("BaseDatos");
         this.dataRef =  database.child("NocturneLife");
-
     }
 
 

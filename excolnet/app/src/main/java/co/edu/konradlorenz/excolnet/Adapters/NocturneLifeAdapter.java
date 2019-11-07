@@ -9,7 +9,6 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
@@ -23,8 +22,6 @@ import co.edu.konradlorenz.excolnet.Activities.SitesActivity;
 import co.edu.konradlorenz.excolnet.Entities.Interes;
 import co.edu.konradlorenz.excolnet.R;
 import de.hdodenhof.circleimageview.CircleImageView;
-
-import static java.lang.Double.parseDouble;
 
 public class NocturneLifeAdapter extends RecyclerView.Adapter<NocturneLifeAdapter.TopicHolder> {
 
@@ -60,18 +57,22 @@ public class NocturneLifeAdapter extends RecyclerView.Adapter<NocturneLifeAdapte
         holder.getDescTextView().setText(this.currentInterests.get(position).getDescription());
         Glide.with(myContext).load(currentInterests.get(position).getPhotoUrl()).error(R.drawable.com_facebook_profile_picture_blank_square).into(holder.getImageVC());
 
-        if(currentInterests.get(position).getTopicType().equals("Disco")){
-            holder.getDynamicIcon().setCompoundDrawablesWithIntrinsicBounds(R.drawable.disc_icon , 0 , 0, 0);
-            holder.getLocationButton().setBackgroundResource(R.drawable.background_disco_btn);
-            holder.getPrincipalLayout().setBackgroundResource(R.drawable.common_card_disco_bkg);
-        }else if(currentInterests.get(position).getTopicType().equals("Pubs")){
-            holder.getDynamicIcon().setCompoundDrawablesWithIntrinsicBounds(R.drawable.pubs , 0 , 0, 0);
-            holder.getLocationButton().setBackgroundResource(R.drawable.background_pub_btn);
-            holder.getPrincipalLayout().setBackgroundResource(R.drawable.common_card_pub_bkg);
-        }else if(currentInterests.get(position).getTopicType().equals("Restaurant")){
-            holder.getDynamicIcon().setCompoundDrawablesWithIntrinsicBounds(R.drawable.restaurant_icon, 0 , 0, 0);
-            holder.getLocationButton().setBackgroundResource(R.drawable.background_rest_btn);
-            holder.getPrincipalLayout().setBackgroundResource(R.drawable.common_card_rest_bkg);
+        switch (currentInterests.get(position).getTopicType()) {
+            case "Disco":
+                holder.getDynamicIcon().setCompoundDrawablesWithIntrinsicBounds(R.drawable.disc_icon, 0, 0, 0);
+                holder.getLocationButton().setBackgroundResource(R.drawable.background_disco_btn);
+                holder.getPrincipalLayout().setBackgroundResource(R.drawable.common_card_disco_bkg);
+                break;
+            case "Pubs":
+                holder.getDynamicIcon().setCompoundDrawablesWithIntrinsicBounds(R.drawable.pubs, 0, 0, 0);
+                holder.getLocationButton().setBackgroundResource(R.drawable.background_pub_btn);
+                holder.getPrincipalLayout().setBackgroundResource(R.drawable.common_card_pub_bkg);
+                break;
+            case "Restaurant":
+                holder.getDynamicIcon().setCompoundDrawablesWithIntrinsicBounds(R.drawable.restaurant_icon, 0, 0, 0);
+                holder.getLocationButton().setBackgroundResource(R.drawable.background_rest_btn);
+                holder.getPrincipalLayout().setBackgroundResource(R.drawable.common_card_rest_bkg);
+                break;
         }
 
 
@@ -97,7 +98,7 @@ public class NocturneLifeAdapter extends RecyclerView.Adapter<NocturneLifeAdapte
 
 
 
-        public TopicHolder(@NonNull View itemView) {
+        TopicHolder(@NonNull View itemView) {
             super(itemView);
             this.imageVC = itemView.findViewById(R.id.circlenImage);
             this.descTextView = itemView.findViewById(R.id.textDesc);
@@ -109,7 +110,7 @@ public class NocturneLifeAdapter extends RecyclerView.Adapter<NocturneLifeAdapte
             initializeLocationListener();
         }
 
-        public void initializeLocationListener(){
+        void initializeLocationListener(){
 
             locationButton.setOnClickListener(new View.OnClickListener() {
                 @Override

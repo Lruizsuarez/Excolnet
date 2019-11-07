@@ -65,6 +65,7 @@ import com.twitter.sdk.android.core.identity.TwitterLoginButton;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import co.edu.konradlorenz.excolnet.Entities.Usuario;
 import co.edu.konradlorenz.excolnet.Fragments.PasswordRecoveryFragment;
@@ -76,7 +77,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
     private static final int RC_SIGN_IN = 101;
     private static final int REQUEST_READ_CONTACTS = 0;
-    // variables de clase ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
     private FirebaseAuth mAuth;
     private EditText mPasswordView;
     private Button mEmailSignInButton;
@@ -155,7 +156,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         createListeners();
     }
 
-    //metodos de autocompletado de textedit de correo electronico y pedida de permisos de acceso a contactos--------------------------------------------------------------------------------------------
     @Override
     public void onLoaderReset(Loader<Cursor> cursorLoader) {
 
@@ -187,7 +187,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         addEmailsToAutoComplete(emails);
     }
 
-    //metodo que recibe el resultado de la tarea asincrona de inicio de sesion--------------------------------------------------------------------------------------------------------------------------
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -197,6 +196,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
             try {
                 GoogleSignInAccount account = task.getResult(ApiException.class);
+                assert account != null;
                 firebaseAuthWithGoogle(account);
             } catch (ApiException e) {
                 logInError();
@@ -206,9 +206,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        /**
-         * Callback received when a permissions request has been completed.
-         */
         if (requestCode == REQUEST_READ_CONTACTS) {
             if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 populateAutoComplete();
@@ -216,7 +213,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         }
     }
 
-    //obtener los componentes para las distintas funcionalidades (el error que aparece es normal)-------------------------------------------------------------------------------------------------------
     private void getLayoutComponents() {
         mEmailSignInButton = findViewById(R.id.email_sign_in_button);
         mPasswordView = findViewById(R.id.password);
@@ -257,7 +253,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         mAuth = FirebaseAuth.getInstance();
     }
 
-    //manejo de los distintos eventos obtenidos en la actividad-----------------------------------------------------------------------------------------------------------------------------------------
     private void googleSignIn() {
         showProgress(true);
         Intent signInIntent = mGoogleSignInClient.getSignInIntent();
@@ -350,27 +345,15 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     }
 
     protected boolean isEmailValid(String email) {
-        if (email.contains("@") && email.contains(".")) {
-            return true;
-        } else {
-            return false;
-        }
-
+        return email.contains("@") && email.contains(".");
     }
 
-    //validacion y persistencia de las cuentas en firebase----------------------------------------------------------------------------------------------------------------------------------------------
     private void firebaseAuthWithEmail() {
-        /**
-         * Attempts to sign in or register the account specified by the login form.
-         * If there are form errors (invalid email, missing fields, etc.), the
-         * errors are presented and no actual login attempt is made.
-         */
 
-        // Reset errors.
+
         mEmailView.setError(null);
         mPasswordView.setError(null);
 
-        // Store values at the time of the login attempt.
         String email = mEmailView.getText().toString();
         String password = mPasswordView.getText().toString();
 
@@ -378,7 +361,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         View focusView = null;
 
 
-        // Check for a valid email address.
         if (TextUtils.isEmpty(email)) {
             mEmailView.setError(getString(R.string.error_field_required));
             focusView = mEmailView;
@@ -394,8 +376,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         }
 
         if (cancel) {
-            // There was an error; don't attempt login and focus the first
-            // form field with an error.
             focusView.requestFocus();
         } else {
             showProgress(true);
@@ -445,7 +425,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 });
     }
 
-    //manejo de las distintas alternativas al hacer un inicio de sesion---------------------------------------------------------------------------------------------------------------------------------
     private void logInError() {
         showProgress(false);
         Snackbar.make(findViewById(R.id.main_layout), "Authentication Failed.", Snackbar.LENGTH_SHORT).show();
@@ -454,7 +433,15 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private void logInSucceed() {
         FirebaseUser user = mAuth.getCurrentUser();
         DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
-        Usuario newUser = new Usuario(user.getDisplayName(), user.getEmail(), user.getPhotoUrl().toString(), user.getUid());
+        assert user != null;
+
+        Usuario newUser = new Usuario.Builder()
+                .displayName(user.getDisplayName())
+                .email(user.getEmail())
+                .photoUrl(Objects.requireNonNull(user.getPhotoUrl()).toString())
+                .uid(user.getUid())
+                .create();
+
         mDatabase.child("BaseDatos").child("Users").child(user.getUid()).setValue(newUser);
         Intent i = new Intent(LoginActivity.this, PrincipalActivity.class);
         i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -467,7 +454,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         Snackbar.make(findViewById(R.id.main_layout), "Connection Error.", Snackbar.LENGTH_SHORT).show();
     }
 
-    //metodos de autocompletado de textedit de correo electronico y pedida de permisos de acceso a contactos--------------------------------------------------------------------------------------------
     private interface ProfileQuery {
         String[] PROJECTION = {
                 ContactsContract.CommonDataKinds.Email.ADDRESS,

@@ -28,8 +28,6 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.net.PlacesClient;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,8 +35,6 @@ import java.util.List;
 import co.edu.konradlorenz.excolnet.Entities.Host;
 import co.edu.konradlorenz.excolnet.R;
 
-//
-//
 
 public class SitesActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleMap.OnMyLocationButtonClickListener,
         GoogleMap.OnMyLocationClickListener {
@@ -46,13 +42,8 @@ public class SitesActivity extends AppCompatActivity implements OnMapReadyCallba
     private static final String TAG = "MapsActivity";
     private static final int DEFAULT_ZOOM = 15;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
-    // Used for selecting the current place.
-    private static final int M_MAX_ENTRIES = 5;
-    // A default location (Sydney, Australia) and default zoom to use when location permission is
-    // not granted.
     private final LatLng mDefaultLocation = new LatLng(4.6420828, -78.8355855);
     private GoogleMap mMap;
-    private DatabaseReference mDatabase;
     private double latitud;
     private double longitud;
     private String titulo = "";
@@ -99,7 +90,7 @@ public class SitesActivity extends AppCompatActivity implements OnMapReadyCallba
 
         firebaseLoadData();
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         // Set up the views
         String apiKey = getString(R.string.google_maps_key);
@@ -110,7 +101,6 @@ public class SitesActivity extends AppCompatActivity implements OnMapReadyCallba
     }
 
     private void firebaseLoadData() {
-        mDatabase = FirebaseDatabase.getInstance().getReference("BaseDatos");
 
     }
 

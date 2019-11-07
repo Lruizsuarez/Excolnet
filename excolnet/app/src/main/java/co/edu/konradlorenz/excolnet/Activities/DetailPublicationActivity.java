@@ -26,6 +26,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Objects;
 
 import co.edu.konradlorenz.excolnet.Adapters.CommentAdapter;
 import co.edu.konradlorenz.excolnet.Entities.Comentario;
@@ -44,13 +45,11 @@ public class DetailPublicationActivity extends AppCompatActivity {
     private TextView userName;
     private TextView publicationDate;
     private TextView publicationDescription;
-    private Usuario publicationUser;
     private ImageView actualUserImage;
     private ImageView userImage;
     private ImageView publicationImage;
     private FirebaseUser user;
     private DatabaseReference mDatabase;
-    private ValueEventListener lisener;
 
     private TextView cantidadComentarios;
     private TextView cantidadLikes;
@@ -69,18 +68,18 @@ public class DetailPublicationActivity extends AppCompatActivity {
     }
 
     private void setUpToolbar() {
-        String[] firebaseName = user.getDisplayName().split(" ");
-        String userName = "@";
+        String[] firebaseName = Objects.requireNonNull(user.getDisplayName()).split(" ");
+        StringBuilder userName = new StringBuilder("@");
 
         for (int i = 0; i < firebaseName.length; i++) {
             if (i == (firebaseName.length - 1)) {
-                userName += firebaseName[i];
+                userName.append(firebaseName[i]);
             } else {
-                userName += firebaseName[i] + "_";
+                userName.append(firebaseName[i]).append("_");
             }
         }
 
-        getSupportActionBar().setTitle(userName);
+        Objects.requireNonNull(getSupportActionBar()).setTitle(userName.toString());
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
 
@@ -93,7 +92,8 @@ public class DetailPublicationActivity extends AppCompatActivity {
     private void setUpLayoutData() {
 
 
-        String id = getIntent().getExtras().getString("id");
+        String id = Objects.requireNonNull(getIntent().getExtras()).getString("id");
+        assert id != null;
         mDatabase.child("Publicaciones").child(id).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -113,7 +113,7 @@ public class DetailPublicationActivity extends AppCompatActivity {
 
                 final ArrayList<Comentario> comentarios = publicacion.getComentarios();
                 Log.e("holi", "" + comentarios.size());
-                items = (RecyclerView) findViewById(R.id.recicler_comentarios);
+                items = findViewById(R.id.recicler_comentarios);
                 items.setHasFixedSize(true);
 
                 // use a linear layout manager
@@ -131,8 +131,19 @@ public class DetailPublicationActivity extends AppCompatActivity {
                             String pattern = "yyyy-MM-dd";
                             SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
                             String date = simpleDateFormat.format(new Date());
-                            Usuario newUser = new Usuario(user.getDisplayName(), user.getEmail(), user.getPhotoUrl().toString(), user.getUid());
-                            publicacion.getComentarios().add(new Comentario(newUser, comentario.getText().toString(), date));
+                            Usuario newUser = new Usuario.Builder()
+                                    .displayName(user.getDisplayName())
+                                    .email(user.getEmail())
+                                    .photoUrl(Objects.requireNonNull(user.getPhotoUrl()).toString())
+                                    .uid(user.getUid())
+                                    .create();
+
+                            publicacion.getComentarios().add(new Comentario.Builder()
+                                    .usuario(newUser)
+                                    .texto(comentario.getText().toString())
+                                    .fechaComentario(date)
+                                    .create());
+
                             DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference("BaseDatos");
                             mDatabase.child("Publicaciones").child(publicacion.getId()).setValue(publicacion);
                             comentario.setText("");

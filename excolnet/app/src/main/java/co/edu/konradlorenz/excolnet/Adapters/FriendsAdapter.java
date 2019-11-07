@@ -37,10 +37,6 @@ public class FriendsAdapter extends RecyclerView.Adapter<FriendsAdapter.FriendHo
         return friends;
     }
 
-    public void setFriends(ArrayList<Usuario> friends) {
-        this.friends = friends;
-    }
-
     public Context getContext() {
         return context;
     }
@@ -61,11 +57,9 @@ public class FriendsAdapter extends RecyclerView.Adapter<FriendsAdapter.FriendHo
     @Override
     public FriendHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         view = LayoutInflater.from(parent.getContext()).inflate(R.layout.friend_cardview, parent, false);
-        this.friendCardView = (CardView) view.findViewById(R.id.FriendCard);
+        this.friendCardView = view.findViewById(R.id.FriendCard);
 
-        FriendHolder friendHolder = new FriendHolder(view);
-
-        return friendHolder;
+        return new FriendHolder(view);
     }
 
     @Override
@@ -93,14 +87,14 @@ public class FriendsAdapter extends RecyclerView.Adapter<FriendsAdapter.FriendHo
         private CircleImageView friendImage;
         private TextView friendName;
 
-        public FriendHolder(@NonNull View itemView) {
+        FriendHolder(@NonNull View itemView) {
             super(itemView);
 
-            this.friendImage = (CircleImageView) itemView.findViewById(R.id.friend_Image);
-            this.friendName = (TextView) itemView.findViewById(R.id.friend_name);
+            this.friendImage = itemView.findViewById(R.id.friend_Image);
+            this.friendName = itemView.findViewById(R.id.friend_name);
         }
 
-        public CircleImageView getFriendImage() {
+        CircleImageView getFriendImage() {
             return friendImage;
         }
 
@@ -108,7 +102,7 @@ public class FriendsAdapter extends RecyclerView.Adapter<FriendsAdapter.FriendHo
             this.friendImage = friendImage;
         }
 
-        public TextView getFriendName() {
+        TextView getFriendName() {
             return friendName;
         }
 

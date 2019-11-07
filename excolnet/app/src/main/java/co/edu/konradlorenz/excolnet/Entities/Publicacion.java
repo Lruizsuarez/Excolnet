@@ -8,92 +8,89 @@ import java.util.List;
 public class Publicacion implements Serializable {
 
     private String id;
-    // User owner of publication
     private Usuario usuario;
-
-    // Text description of the publication
     private String texto;
-
-    // Date to post
     private String fechaPublicacion;
-
-    // Comments list
     private ArrayList<Comentario> comentarios;
-
-    //List of interactions of publication
     private List<Usuario> usuariosQueGustan;
-
-    //Image of publication
     private String imagen;
 
-    public Publicacion() {
+
+    private Publicacion(final Builder builder) {
         this.comentarios = new ArrayList<>();
         this.usuariosQueGustan = new ArrayList<>();
+        this.id = builder.id;
+        this.usuario = builder.usuario;
+        this.texto = builder.texto;
+        this.fechaPublicacion = builder.fechaPublicacion;
+        this.imagen = builder.imagen;
     }
 
-    public Publicacion(String id, Usuario usuario, String texto, String fechaPublicacion, String imagen) {
-        this.comentarios = new ArrayList<>();
-        this.usuariosQueGustan = new ArrayList<>();
-        this.id = id;
-        this.usuario = usuario;
-        this.texto = texto;
-        this.fechaPublicacion = fechaPublicacion;
-        this.imagen = imagen;
-    }
 
     public String getId() {
         return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
     }
 
     public Usuario getUsuario() {
         return usuario;
     }
 
-    public void setUsuario(Usuario usuario) {
-        this.usuario = usuario;
-    }
-
     public String getTexto() {
         return texto;
-    }
-
-    public void setTexto(String texto) {
-        this.texto = texto;
     }
 
     public String getFechaPublicacion() {
         return fechaPublicacion;
     }
 
-    public void setFechaPublicacion(String fechaPublicacion) {
-        this.fechaPublicacion = fechaPublicacion;
-    }
-
     public ArrayList<Comentario> getComentarios() {
         return comentarios;
-    }
-
-    public void setComentarios(ArrayList<Comentario> comentarios) {
-        this.comentarios = comentarios;
     }
 
     public List<Usuario> getUsuariosQueGustan() {
         return usuariosQueGustan;
     }
 
-    public void setUsuariosQueGustan(List<Usuario> usuariosQueGustan) {
-        this.usuariosQueGustan = usuariosQueGustan;
-    }
-
     public String getImagen() {
         return imagen;
     }
 
-    public void setImagen(String imagen) {
-        this.imagen = imagen;
+    public static class Builder {
+        private String id;
+        private Usuario usuario;
+        private String texto;
+        private String fechaPublicacion;
+        private String imagen;
+
+
+        public Builder id(final String id) {
+            this.id = id;
+            return this;
+        }
+
+        public Builder usuario(final Usuario usuario) {
+            this.usuario = usuario;
+            return this;
+        }
+
+        public Builder texto(final String texto) {
+            this.texto = texto;
+            return this;
+        }
+
+        public Builder fechaPublicacion(final String fechaPublicacion) {
+            this.fechaPublicacion = fechaPublicacion;
+            return this;
+        }
+
+
+        public Builder imagen(final String imagen) {
+            this.imagen = imagen;
+            return this;
+        }
+
+        public Publicacion create(){
+            return new Publicacion(this);
+        }
     }
 }

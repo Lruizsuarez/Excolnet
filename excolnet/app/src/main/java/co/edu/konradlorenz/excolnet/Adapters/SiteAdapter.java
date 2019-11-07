@@ -40,8 +40,7 @@ public class SiteAdapter extends RecyclerView.Adapter<SiteAdapter.SiteHolder> {
     public SiteHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         view = LayoutInflater.from(parent.getContext()).inflate(R.layout.adapter_site, parent, false);
         findMaterialElements();
-        SiteHolder sth = new SiteHolder(view);
-        return sth;
+        return new SiteHolder(view);
     }
 
     @Override
@@ -84,12 +83,12 @@ public class SiteAdapter extends RecyclerView.Adapter<SiteAdapter.SiteHolder> {
     }
 
 
-    public static class SiteHolder extends RecyclerView.ViewHolder {
+    static class SiteHolder extends RecyclerView.ViewHolder {
         ImageView imagenSite;
         TextView tituloSite;
         TextView descripcionSite;
 
-        public SiteHolder(@NonNull View itemView) {
+        SiteHolder(@NonNull View itemView) {
             super(itemView);
             imagenSite = itemView.findViewById(R.id.imagen_site);
             tituloSite = itemView.findViewById(R.id.titulo_site);

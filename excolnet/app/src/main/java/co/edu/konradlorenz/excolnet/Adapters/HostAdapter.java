@@ -40,8 +40,7 @@ public class HostAdapter extends RecyclerView.Adapter<HostAdapter.HostHolder> {
     public HostAdapter.HostHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         view = LayoutInflater.from(parent.getContext()).inflate(R.layout.adapter_housting, parent, false);
         findMaterialElements();
-        HostAdapter.HostHolder hth = new HostAdapter.HostHolder(view);
-        return hth;
+        return new HostHolder(view);
     }
 
 
@@ -77,16 +76,8 @@ public class HostAdapter extends RecyclerView.Adapter<HostAdapter.HostHolder> {
         return hosts.size();
     }
 
-    public ArrayList<Host> getHosts() {
-        return hosts;
-    }
 
-    public void setHosts(ArrayList<Host> hosts) {
-        this.hosts = hosts;
-    }
-
-
-    public static class HostHolder extends RecyclerView.ViewHolder {
+    static class HostHolder extends RecyclerView.ViewHolder {
         ImageView imagenHost;
         TextView nombreHost;
         TextView descripcionHost;

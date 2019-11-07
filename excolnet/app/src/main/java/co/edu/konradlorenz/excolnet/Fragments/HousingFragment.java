@@ -36,15 +36,11 @@ public class HousingFragment extends Fragment {
     private DatabaseReference baseDatos;
     private ArrayList<Host> hosts;
     private ValueEventListener listener;
-    private FirebaseUser user;
     private Button hostButton;
-    private ArrayList<Double> latitudes;
-    private ArrayList<Double> longitudes;
     private View view;
 
 
     public HousingFragment() {
-        // Required empty public constructor
     }
 
 
@@ -79,7 +75,6 @@ public class HousingFragment extends Fragment {
         baseDatos = FirebaseDatabase.getInstance().getReference("BaseDatos");
         hosts = new ArrayList<>();
         FirebaseAuth mAuth = FirebaseAuth.getInstance();
-        user = mAuth.getCurrentUser();
     }
 
 

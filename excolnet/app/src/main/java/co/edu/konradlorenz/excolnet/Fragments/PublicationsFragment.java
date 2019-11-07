@@ -24,7 +24,7 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Stack;
+import java.util.Objects;
 
 import co.edu.konradlorenz.excolnet.Adapters.PublicationAdapter;
 import co.edu.konradlorenz.excolnet.Entities.Publicacion;
@@ -70,7 +70,7 @@ public class PublicationsFragment extends Fragment {
         super.onResume();
         lisener = new ValueEventListener() {
             @Override
-            public void onDataChange(DataSnapshot snapshot) {
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
                 publicaciones.clear();
 
                 for (DataSnapshot asistenteSnapshot : snapshot.getChildren()) {
@@ -79,27 +79,26 @@ public class PublicationsFragment extends Fragment {
                         publicaciones.add(publicacion);
                     } else {
                         Publicacion publicacion = asistenteSnapshot.getValue(Publicacion.class);
+                        assert publicacion != null;
                         if (publicacion.getUsuario().getDisplayName().equals(usuario.getDisplayName())) {
                             publicaciones.add(publicacion);
                         }
                     }
                 }
 
-                items = (RecyclerView) getView().findViewById(R.id.lista_publicaciones);
+                items = Objects.requireNonNull(getView()).findViewById(R.id.lista_publicaciones);
                 items.setHasFixedSize(true);
 
-                // use a linear layout manager
                 mLayoutManager = new LinearLayoutManager(getContext());
                 items.setLayoutManager(mLayoutManager);
                 Collections.reverse(publicaciones);
 
-                // specify an adapter (see also next example)
                 mAdapter = new PublicationAdapter(getContext(), publicaciones, user);
                 items.setAdapter(mAdapter);
             }
 
             @Override
-            public void onCancelled(DatabaseError firebaseError) {
+            public void onCancelled(@NonNull DatabaseError firebaseError) {
                 Log.e("The read failed: ", firebaseError.getMessage());
             }
         };

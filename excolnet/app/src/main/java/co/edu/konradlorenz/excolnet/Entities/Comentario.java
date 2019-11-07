@@ -7,49 +7,52 @@ Modificado por Enrique Suarez:6/03/2019
  */
 public class Comentario {
 
-    //User owner of comment
     private Usuario usuario;
-
-    //Body of comment
-    private String textComment;
-    // Date to post
+    private String texto;
     private String fechaComentario;
 
-    public Comentario() {
+
+    public Comentario(final Builder builder) {
+        this.usuario = builder.usuario;
+        this.texto = builder.texto;
+        this.fechaComentario = builder.fechaComentario;
 
     }
 
-    public Comentario(Usuario usuario, String comentario, String fechaComentario) {
-        this.usuario = usuario;
-        this.textComment = comentario;
-        this.fechaComentario = fechaComentario;
-
-    }
-    /*
-    GETTERS & SETTERS
-     */
-
-    public co.edu.konradlorenz.excolnet.Entities.Usuario getUsuario() {
+    public Usuario getUsuario() {
         return usuario;
     }
 
-    public void setUsuario(co.edu.konradlorenz.excolnet.Entities.Usuario usuario) {
-        this.usuario = usuario;
-    }
-
-    public String getTextComment() {
-        return textComment;
-    }
-
-    public void setTextComment(String textComment) {
-        this.textComment = textComment;
+    public String getTexto() {
+        return texto;
     }
 
     public String getFechaComentario() {
         return fechaComentario;
     }
 
-    public void setFechaComentario(String fechaComentario) {
-        this.fechaComentario = fechaComentario;
+    public static class Builder {
+        private Usuario usuario;
+        private String texto;
+        private String fechaComentario;
+
+        public Builder usuario(final Usuario usuario) {
+            this.usuario = usuario;
+            return this;
+        }
+
+        public Builder texto(final String texto) {
+            this.texto = texto;
+            return this;
+        }
+
+        public Builder fechaComentario(final String fechaComentario) {
+            this.fechaComentario = fechaComentario;
+            return this;
+        }
+
+        public Comentario create() {
+            return new Comentario(this);
+        }
     }
 }

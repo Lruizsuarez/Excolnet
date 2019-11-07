@@ -37,11 +37,9 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatHolder> {
     @Override
     public ChatHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         view = LayoutInflater.from(parent.getContext()).inflate(R.layout.message_cardview, parent, false);
-        messageCardView = (CardView) view.findViewById(R.id.cardViewMessage);
+        messageCardView = view.findViewById(R.id.cardViewMessage);
 
-        ChatHolder chatHolder = new ChatHolder(messageCardView);
-
-        return chatHolder;
+        return new ChatHolder(messageCardView);
     }
 
 

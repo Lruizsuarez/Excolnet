@@ -1,18 +1,17 @@
 package co.edu.konradlorenz.excolnet.Activities;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.SearchView;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.ListView;
 import android.widget.Spinner;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,40 +34,36 @@ public class LivingCostActivity extends AppCompatActivity {
 
     List<Precios> listaDePreciosEntity;
     List<String> listaNombrPrecios;
-    private ArrayList<String> listaPrecios;
     private Context context;
     private Ciudad ciudad;
     private SearchView searchView;
     private Spinner spinner;
     private ArrayAdapter adapterSpinner;
     private String selectedItem;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_living_cost);
-        context=this;
-        selectedItem="Bogota";
+        context = this;
+        selectedItem = "Bogota";
         listaDePreciosEntity = new ArrayList<>();
-        listaNombrPrecios=new ArrayList<>();
-        listaPrecios=new ArrayList<>();
+        listaNombrPrecios = new ArrayList<>();
         ciudad = new Ciudad();
         searchView = findViewById(R.id.search_cost);
         spinner = findViewById(R.id.spinner);
 
-        adapterSpinner=ArrayAdapter.createFromResource(this,R.array.city_list,R.layout.item_spinner);
+        adapterSpinner = ArrayAdapter.createFromResource(this, R.array.city_list, R.layout.item_spinner);
         adapterSpinner.setDropDownViewResource(R.layout.item_spinner);
         spinner.setAdapter(adapterSpinner);
-       //  arrayAdapter = new ArrayAdapter(this, R.layout.precios,listaPrecios);
-        adapterPrecios = new AdapterPrecios(context,listaDePreciosEntity);
-        recyclerView=findViewById(R.id.preciosrecycler);
+        adapterPrecios = new AdapterPrecios(context, listaDePreciosEntity);
+        recyclerView = findViewById(R.id.preciosrecycler);
 
         recyclerView.setAdapter(adapterPrecios);
         getCiudad();
 
 
-
     }
-
 
 
     private void getCiudad() {
@@ -77,26 +72,26 @@ public class LivingCostActivity extends AppCompatActivity {
                 .build();
 
         PriceService priceService = retrofit.create(PriceService.class);
-        Call<Ciudad> call = priceService.getCiudad("hfkibcktwtxi4f",selectedItem);
+        Call<Ciudad> call = priceService.getCiudad("hfkibcktwtxi4f", selectedItem);
         call.enqueue(new Callback<Ciudad>() {
             @Override
             public void onResponse(Call<Ciudad> call, Response<Ciudad> response) {
 
                 ciudad = response.body();
-//https://www.numbeo.com/api/city_prices?api_key%3Dhfkibcktwtxi4f%26query=Bogota
-               listaDePreciosEntity = ciudad.getPrices();
+                assert ciudad != null;
+                listaDePreciosEntity = ciudad.getPrices();
 
-                recyclerView =(RecyclerView) findViewById(R.id.preciosrecycler);
+                recyclerView = findViewById(R.id.preciosrecycler);
                 recyclerView.setHasFixedSize(true);
                 mlayoutManagerS = new LinearLayoutManager(context);
                 recyclerView.setLayoutManager(mlayoutManagerS);
-                adapterPrecios = new AdapterPrecios(context,listaDePreciosEntity);
+                adapterPrecios = new AdapterPrecios(context, listaDePreciosEntity);
                 recyclerView.setAdapter(adapterPrecios);
             }
 
             @Override
             public void onFailure(Call<Ciudad> call, Throwable t) {
-                Log.w("LIVING_COST",t.getCause()+"---"+t.getMessage());
+                Log.w("LIVING_COST", t.getCause() + "---" + t.getMessage());
             }
         });
     }
@@ -104,7 +99,7 @@ public class LivingCostActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        if(searchView!=null){
+        if (searchView != null) {
             searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
                 @Override
                 public boolean onQueryTextSubmit(String query) {
@@ -122,37 +117,36 @@ public class LivingCostActivity extends AppCompatActivity {
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                selectedItem=spinner.getSelectedItem().toString();
+                selectedItem = spinner.getSelectedItem().toString();
                 getCiudad();
 
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
-                selectedItem =spinner.getSelectedItem().toString();
+                selectedItem = spinner.getSelectedItem().toString();
                 adapterPrecios.notifyDataSetChanged();
             }
         });
 
     }
-    private void search (String newText){
+
+    private void search(String newText) {
         ArrayList<Precios> precios = new ArrayList<>();
-        for(Precios pr: listaDePreciosEntity){
-            if(pr.getItem_name().toLowerCase().contains(newText.toLowerCase())
-            &&!newText.equals(" ")){
+        for (Precios pr : listaDePreciosEntity) {
+            if (pr.getItem_name().toLowerCase().contains(newText.toLowerCase())
+                    && !newText.equals(" ")) {
                 precios.add(pr);
             }
         }
 
-        recyclerView =(RecyclerView) findViewById(R.id.preciosrecycler);
+        recyclerView = findViewById(R.id.preciosrecycler);
         recyclerView.setHasFixedSize(true);
         mlayoutManagerS = new LinearLayoutManager(context);
         recyclerView.setLayoutManager(mlayoutManagerS);
-        adapterPrecios = new AdapterPrecios(context,precios);
+        adapterPrecios = new AdapterPrecios(context, precios);
         recyclerView.setAdapter(adapterPrecios);
-adapterPrecios.notifyDataSetChanged();
-
-
+        adapterPrecios.notifyDataSetChanged();
 
 
     }

@@ -10,19 +10,16 @@ import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.alespero.expandablecardview.ExpandableCardView;
-
-import java.util.ArrayList;
 import java.util.List;
 
 import co.edu.konradlorenz.excolnet.Entities.Precios;
 import co.edu.konradlorenz.excolnet.R;
 
 public class AdapterPrecios extends RecyclerView.Adapter<AdapterPrecios.PriceHolder> {
-        private Context mContext;
-        List<Precios> precios_items;
-        private View view;
-        CardView cardView;
+    private Context mContext;
+    List<Precios> precios_items;
+    private View view;
+    CardView cardView;
 
     public AdapterPrecios(Context mContext, List<Precios> precios_items) {
         this.mContext = mContext;
@@ -32,20 +29,19 @@ public class AdapterPrecios extends RecyclerView.Adapter<AdapterPrecios.PriceHol
     @NonNull
     @Override
     public PriceHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        view=LayoutInflater.from(parent.getContext()).inflate(R.layout.livingcard_layout,parent,false);
+        view = LayoutInflater.from(parent.getContext()).inflate(R.layout.livingcard_layout, parent, false);
         findMaterialElements();
-        PriceHolder priceHolder = new PriceHolder(view);
-        return priceHolder;
+        return new PriceHolder(view);
     }
 
     private void findMaterialElements() {
-       cardView=view.findViewById(R.id.expand_card);
+        cardView = view.findViewById(R.id.expand_card);
     }
 
     @Override
     public void onBindViewHolder(@NonNull PriceHolder holder, int position) {
         holder.textViewnombre.setText(precios_items.get(position).getItem_name());
-        holder.textViewprecio.setText("$"+String.format("%.0f",precios_items.get(position).getAverage_price()));
+        holder.textViewprecio.setText("$" + String.format("%.0f", precios_items.get(position).getAverage_price()));
     }
 
     @Override
@@ -54,14 +50,14 @@ public class AdapterPrecios extends RecyclerView.Adapter<AdapterPrecios.PriceHol
     }
 
 
-    public class PriceHolder extends RecyclerView.ViewHolder{
+    class PriceHolder extends RecyclerView.ViewHolder {
         CardView cardView;
         TextView textViewnombre;
         TextView textViewprecio;
 
-        public PriceHolder(@NonNull View itemView) {
+        PriceHolder(@NonNull View itemView) {
             super(itemView);
-            cardView=itemView.findViewById(R.id.expand_card);
+            cardView = itemView.findViewById(R.id.expand_card);
             textViewnombre = itemView.findViewById(R.id.precios_text_n);
             textViewprecio = itemView.findViewById(R.id.precios_text);
         }

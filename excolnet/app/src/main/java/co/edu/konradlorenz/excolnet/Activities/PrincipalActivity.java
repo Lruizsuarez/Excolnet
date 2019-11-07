@@ -19,7 +19,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -42,15 +41,12 @@ public class PrincipalActivity extends AppCompatActivity {
     private static final int VERIFY_PERMISSIONS_REQUEST = 1;
     private String ACTIVITY_NAME = "PrincipalActivity";
     private BottomAppBar bottomAppBar;
-    private FirebaseAuth mAuth;
     private FirebaseUser user;
     private DatabaseReference mDatabase;
     private ArrayList<Usuario> listaUsuarios;
-    private RecyclerView.LayoutManager mLayoutManager;
     private FloatingActionButton fabPublications;
     private RecyclerView recyclerView;
     private SearchView searchView;
-    private AdapterSearch adapterSearch;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,9 +57,6 @@ public class PrincipalActivity extends AppCompatActivity {
         findMaterialElements();
         setSupportActionBar(bottomAppBar);
         fabPublicationsHandler();
-
-        mAuth = FirebaseAuth.getInstance();
-        user = mAuth.getCurrentUser();
 
         if (checkPermissionsArray(Permissions.PERMISSIONS)) {
 
@@ -130,9 +123,9 @@ public class PrincipalActivity extends AppCompatActivity {
                 myListUsuarios.add(usuarioBuscado);
             }
         }
-        adapterSearch = new AdapterSearch(getApplicationContext(), myListUsuarios);
+        AdapterSearch adapterSearch = new AdapterSearch(getApplicationContext(), myListUsuarios);
         recyclerView.setHasFixedSize(true);
-        mLayoutManager = new LinearLayoutManager(getApplicationContext());
+        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
         recyclerView.setLayoutManager(mLayoutManager);
         recyclerView.setAdapter(adapterSearch);
     }
@@ -220,9 +213,7 @@ public class PrincipalActivity extends AppCompatActivity {
     }
 
     public boolean checkPermissionsArray(String[] permissions) {
-
-        for (int i = 0; i < permissions.length; i++) {
-            String check = permissions[i];
+        for (String check : permissions) {
             if (!checkPermissions(check)) {
                 return false;
             }
@@ -231,21 +222,11 @@ public class PrincipalActivity extends AppCompatActivity {
     }
 
     public boolean checkPermissions(String permission) {
-
         int permissionRequest = ActivityCompat.checkSelfPermission(PrincipalActivity.this, permission);
-
-        if (permissionRequest != PackageManager.PERMISSION_GRANTED) {
-            return false;
-        } else {
-            return true;
-        }
+        return permissionRequest == PackageManager.PERMISSION_GRANTED;
     }
 
     public ArrayList<Usuario> getListaUsuarios() {
         return listaUsuarios;
-    }
-
-    public void setListaUsuarios(ArrayList<Usuario> listaUsuarios) {
-        this.listaUsuarios = listaUsuarios;
     }
 }

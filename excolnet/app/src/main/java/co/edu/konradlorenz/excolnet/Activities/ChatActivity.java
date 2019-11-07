@@ -33,6 +33,7 @@ import com.google.firebase.storage.UploadTask;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.Objects;
 
 import co.edu.konradlorenz.excolnet.Adapters.ChatAdapter;
 import co.edu.konradlorenz.excolnet.Entities.Mensaje;
@@ -49,9 +50,7 @@ public class ChatActivity extends AppCompatActivity {
     private EditText messageInput;
     private ImageButton sendButton;
     private ImageButton galleryButton;
-    //External User
     private Usuario chatUser;
-    //Current User
     private FirebaseUser currentUser;
     private DatabaseReference myConversation;
     private DatabaseReference externalConversation;
@@ -60,12 +59,8 @@ public class ChatActivity extends AppCompatActivity {
     private ValueEventListener valueEventListener;
     private RecyclerView.LayoutManager layoutManager;
     private ChatAdapter adapter;
-    //Message_Type identifiers
     private final String message_Type_message = "1";
     private final String message_Type_image = "2";
-
-    //Storage references
-
 
     private FirebaseStorage storage;
     private StorageReference chatImgReference;
@@ -96,12 +91,12 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     public void getLayoutComponents() {
-        this.userChatImage = (CircleImageView) findViewById(R.id.circleAvatarImage);
-        this.userChatName = (TextView) findViewById(R.id.UserChatName);
-        this.messageList = (RecyclerView) findViewById(R.id.MessageList);
-        this.messageInput = (EditText) findViewById(R.id.message_input);
-        this.sendButton = (ImageButton) findViewById(R.id.sendMessage_button);
-        this.galleryButton = (ImageButton) findViewById(R.id.galleryChatImage);
+        this.userChatImage = findViewById(R.id.circleAvatarImage);
+        this.userChatName = findViewById(R.id.UserChatName);
+        this.messageList = findViewById(R.id.MessageList);
+        this.messageInput = findViewById(R.id.message_input);
+        this.sendButton = findViewById(R.id.sendMessage_button);
+        this.galleryButton = findViewById(R.id.galleryChatImage);
 
     }
 
@@ -152,19 +147,6 @@ public class ChatActivity extends AppCompatActivity {
         messageList.setAdapter(adapter);
     }
 
-    public void restartAdapter() {
-        ChatAdapter newAdapter = new ChatAdapter(getApplicationContext(), currentUser.getUid());
-        adapter = newAdapter;
-        adapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
-            @Override
-            public void onItemRangeInserted(int positionStart, int itemCount) {
-                super.onItemRangeInserted(positionStart, itemCount);
-                ScrollBar();
-            }
-        });
-
-    }
-
     public void ScrollBar() {
         messageList.scrollToPosition(adapter.getItemCount() - 1);
     }
@@ -178,7 +160,6 @@ public class ChatActivity extends AppCompatActivity {
 
 
     public void getChatData() {
-
         this.adapter.getMessages().clear();
         this.valueEventListener = new ValueEventListener() {
             @Override
@@ -197,10 +178,7 @@ public class ChatActivity extends AppCompatActivity {
                         if (msg.getDestinyUUID().equals(currentUser.getUid())) {
                             adapter.addMessage(msg);
                         }
-
                     }
-
-
                 }
                 messageList.setAdapter(adapter);
 
@@ -214,7 +192,6 @@ public class ChatActivity extends AppCompatActivity {
         };
 
         myConversation.addValueEventListener(valueEventListener);
-
     }
 
 
@@ -225,7 +202,6 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     public void addListeners() {
-
         galleryButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -236,25 +212,26 @@ public class ChatActivity extends AppCompatActivity {
             }
         });
 
-
         sendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-
                 String message = messageInput.getText().toString();
                 String time = getMessageTime();
 
-                if (message != null && !message.isEmpty()) {
-                    Mensaje mensaje = new Mensaje(currentUser.getUid(), chatUser.getUid(), currentUser.getDisplayName(), currentUser.getPhotoUrl().toString(), time, message, message_Type_message);
-                    //restartAdapter();
-
+                if (!message.isEmpty()) {
+                    Mensaje mensaje = new Mensaje.Builder()
+                            .senderUID(currentUser.getUid())
+                            .destinyUUID(chatUser.getUid())
+                            .senderDisplayName(chatUser.getDisplayName())
+                            .photoUrl(Objects.requireNonNull(currentUser.getPhotoUrl()).toString())
+                            .senderTime(time)
+                            .message(message)
+                            .message_type(message_Type_message)
+                            .create();
 
                     myConversation.push().setValue(mensaje);
                     externalConversation.push().setValue(mensaje);
-
                     messageInput.setText("");
-
                 }
             }
         });
@@ -294,11 +271,11 @@ public class ChatActivity extends AppCompatActivity {
 
             UploadTask uploadTask = referencePhoto.putFile(photo);
 
-            Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
+            uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
                 @Override
                 public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
                     if (!task.isSuccessful()) {
-                        throw task.getException();
+                        throw Objects.requireNonNull(task.getException());
                     }
 
                     // Continue with the task to get the download URL
@@ -308,25 +285,23 @@ public class ChatActivity extends AppCompatActivity {
                 @Override
                 public void onComplete(@NonNull Task<Uri> task) {
                     if (task.isSuccessful()) {
-                        // restartAdapter();
-                        Uri downloadUri = task.getResult();
                         String time = getMessageTime();
-                        Mensaje mensaje = new Mensaje(currentUser.getUid(), chatUser.getUid(), currentUser.getDisplayName(), currentUser.getPhotoUrl().toString(), time, getSimpleName() + " ha enviado una foto. ", downloadUri.toString(), message_Type_image);
+                        Mensaje mensaje = new Mensaje.Builder()
+                                .senderUID(currentUser.getUid())
+                                .destinyUUID(chatUser.getUid())
+                                .senderDisplayName(chatUser.getDisplayName())
+                                .photoUrl(Objects.requireNonNull(currentUser.getPhotoUrl()).toString())
+                                .senderTime(time)
+                                .message(" ha enviado una foto.")
+                                .message_type(message_Type_image)
+                                .create();
+
                         myConversation.push().setValue(mensaje);
                         externalConversation.push().setValue(mensaje);
-                    } else {
-                        // Handle failures
-                        // ...
                     }
                 }
             });
 
         }
-    }
-
-    public String getSimpleName() {
-        String[] name;
-        name = currentUser.getDisplayName().split(" ");
-        return name[0];
     }
 }

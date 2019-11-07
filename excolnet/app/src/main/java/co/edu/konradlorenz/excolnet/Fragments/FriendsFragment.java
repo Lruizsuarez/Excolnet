@@ -39,14 +39,12 @@ public class FriendsFragment extends Fragment {
     private FirebaseUser currentUser;
 
     public FriendsFragment() {
-        // Required empty public constructor
     }
 
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_friends, container, false);
     }
 
@@ -59,7 +57,7 @@ public class FriendsFragment extends Fragment {
     }
 
 
-    public void initializeAtributtes() {
+    private void initializeAtributtes() {
         this.databaseReference = FirebaseDatabase.getInstance().getReference("BaseDatos");
         this.friendsList = (RecyclerView) getView().findViewById(R.id.friends_list);
         this.friendsArray = new ArrayList<>();
@@ -114,9 +112,10 @@ public class FriendsFragment extends Fragment {
         databaseReference.child("Friends").child(this.currentUser.getUid()).removeEventListener(valueEventListener);
     }
 
-    public Usuario getFriend(String UserUUID) {
+    private Usuario getFriend(String UserUUID) {
         Usuario returnUser = null;
         PrincipalActivity principalActivity = (PrincipalActivity) getActivity();
+        assert principalActivity != null;
         ArrayList<Usuario> allUsers = principalActivity.getListaUsuarios();
 
         if (allUsers != null && allUsers.size() > 0) {
