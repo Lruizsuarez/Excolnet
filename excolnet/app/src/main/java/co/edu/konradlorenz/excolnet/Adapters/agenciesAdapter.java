@@ -17,17 +17,19 @@ import com.bumptech.glide.Glide;
 import java.util.ArrayList;
 
 import co.edu.konradlorenz.excolnet.Entities.Agencia;
+import co.edu.konradlorenz.excolnet.Factory.Adapter;
 import co.edu.konradlorenz.excolnet.R;
 
-public class agenciesAdapter extends RecyclerView.Adapter<agenciesAdapter.agenciesHolder> {
+public class agenciesAdapter extends RecyclerView.Adapter<agenciesAdapter.agenciesHolder>  implements Adapter  {
 
     private Context context;
-
     private ArrayList<Agencia> agencies;
-
     private View view;
 
-    public agenciesAdapter(Context context, ArrayList<Agencia> agencias) {
+    public agenciesAdapter() {
+    }
+
+    public agenciesAdapter(Context context, ArrayList<Agencia> agencias)  {
         this.context = context;
         this.agencies = agencias;
     }
@@ -35,9 +37,8 @@ public class agenciesAdapter extends RecyclerView.Adapter<agenciesAdapter.agenci
     @Override
     public void onBindViewHolder(@NonNull agenciesHolder holder, int position) {
         holder.getTitle().setText(agencies.get(position).getNombre());
-        holder.getPhoneNumber().setText(agencies.get(position).getTelefono() + "");
+        holder.getPhoneNumber().setText(agencies.get(position).getTelefono());
         Glide.with(context).load(agencies.get(position).getPhotoLogo()).error(R.drawable.com_facebook_profile_picture_blank_square).into(holder.getAgencieImg());
-
     }
 
     @NonNull
@@ -50,6 +51,22 @@ public class agenciesAdapter extends RecyclerView.Adapter<agenciesAdapter.agenci
     @Override
     public int getItemCount() {
         return agencies.size();
+    }
+
+    public Context getContext() {
+        return context;
+    }
+
+    public void setContext(Context context) {
+        this.context = context;
+    }
+
+    public ArrayList<Agencia> getAgencies() {
+        return agencies;
+    }
+
+    public void setAgencies(ArrayList<Agencia> agencies) {
+        this.agencies = agencies;
     }
 
     public static class agenciesHolder extends RecyclerView.ViewHolder {
@@ -73,15 +90,8 @@ public class agenciesAdapter extends RecyclerView.Adapter<agenciesAdapter.agenci
         }
 
 
-        public void initializeBtnListener() {
-            plansButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Toast.makeText(plansButton.getContext(), "message", Toast.LENGTH_LONG).show();
-
-                }
-
-            });
+        void initializeBtnListener() {
+            plansButton.setOnClickListener(v -> Toast.makeText(plansButton.getContext(), "message", Toast.LENGTH_LONG).show());
 
         }
 

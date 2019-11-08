@@ -11,6 +11,8 @@ public class Comentario {
     private String texto;
     private String fechaComentario;
 
+    public Comentario() {
+    }
 
     public Comentario(final Builder builder) {
         this.usuario = builder.usuario;

@@ -17,15 +17,19 @@ import java.util.ArrayList;
 
 import co.edu.konradlorenz.excolnet.Activities.ChatActivity;
 import co.edu.konradlorenz.excolnet.Entities.Usuario;
+import co.edu.konradlorenz.excolnet.Factory.Adapter;
 import co.edu.konradlorenz.excolnet.R;
 import de.hdodenhof.circleimageview.CircleImageView;
 
-public class FriendsAdapter extends RecyclerView.Adapter<FriendsAdapter.FriendHolder> {
+public class FriendsAdapter extends RecyclerView.Adapter<FriendsAdapter.FriendHolder>  implements Adapter {
 
     private ArrayList<Usuario> friends;
     private CardView friendCardView;
     private Context context;
     private View view;
+
+    public FriendsAdapter() {
+    }
 
     public FriendsAdapter(ArrayList<Usuario> friends, Context context) {
         this.friends = friends;
@@ -66,13 +70,10 @@ public class FriendsAdapter extends RecyclerView.Adapter<FriendsAdapter.FriendHo
     public void onBindViewHolder(@NonNull FriendHolder holder, final int position) {
         holder.getFriendName().setText(friends.get(position).getDisplayName());
         Glide.with(context).load(friends.get(position).getPhotoUrl()).placeholder(R.drawable.ic_profile).error(R.drawable.com_facebook_profile_picture_blank_square).into(holder.getFriendImage());
-        friendCardView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent chatIntent = new Intent(view.getContext(), ChatActivity.class);
-                chatIntent.putExtra("UserChat", friends.get(position));
-                view.getContext().startActivity(chatIntent);
-            }
+        friendCardView.setOnClickListener(v -> {
+            Intent chatIntent = new Intent(view.getContext(), ChatActivity.class);
+            chatIntent.putExtra("UserChat", friends.get(position));
+            view.getContext().startActivity(chatIntent);
         });
     }
 

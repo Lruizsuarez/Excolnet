@@ -19,6 +19,9 @@ import java.util.List;
 import co.edu.konradlorenz.excolnet.Adapters.AdapterPrecios;
 import co.edu.konradlorenz.excolnet.Entities.Ciudad;
 import co.edu.konradlorenz.excolnet.Entities.Precios;
+import co.edu.konradlorenz.excolnet.Factory.Adapter;
+import co.edu.konradlorenz.excolnet.Factory.AdapterEnum;
+import co.edu.konradlorenz.excolnet.Factory.AdapterFactory;
 import co.edu.konradlorenz.excolnet.Interfaces.PriceService;
 import co.edu.konradlorenz.excolnet.R;
 import retrofit2.Call;
@@ -29,7 +32,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class LivingCostActivity extends AppCompatActivity {
     RecyclerView recyclerView;
-    private RecyclerView.Adapter adapterPrecios;
+    private AdapterPrecios adapterPrecios;
     private RecyclerView.LayoutManager mlayoutManagerS;
 
     List<Precios> listaDePreciosEntity;
@@ -56,13 +59,13 @@ public class LivingCostActivity extends AppCompatActivity {
         adapterSpinner = ArrayAdapter.createFromResource(this, R.array.city_list, R.layout.item_spinner);
         adapterSpinner.setDropDownViewResource(R.layout.item_spinner);
         spinner.setAdapter(adapterSpinner);
-        adapterPrecios = new AdapterPrecios(context, listaDePreciosEntity);
+        adapterPrecios = (AdapterPrecios) AdapterFactory.getAdapter(AdapterEnum.PRECIOS);
+        adapterPrecios.setmContext(context);
+        adapterPrecios.setPrecios_items(listaDePreciosEntity);
         recyclerView = findViewById(R.id.preciosrecycler);
 
         recyclerView.setAdapter(adapterPrecios);
         getCiudad();
-
-
     }
 
 

@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -16,21 +15,13 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.google.android.gms.tasks.Continuation;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.Objects;
@@ -38,7 +29,11 @@ import java.util.Objects;
 import co.edu.konradlorenz.excolnet.Adapters.ChatAdapter;
 import co.edu.konradlorenz.excolnet.Entities.Mensaje;
 import co.edu.konradlorenz.excolnet.Entities.Usuario;
+import co.edu.konradlorenz.excolnet.Factory.AdapterEnum;
+import co.edu.konradlorenz.excolnet.Factory.AdapterFactory;
 import co.edu.konradlorenz.excolnet.R;
+import co.edu.konradlorenz.excolnet.Repository.AuthFacade;
+import co.edu.konradlorenz.excolnet.Repository.SocialFacade;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class ChatActivity extends AppCompatActivity {
@@ -51,19 +46,14 @@ public class ChatActivity extends AppCompatActivity {
     private ImageButton sendButton;
     private ImageButton galleryButton;
     private Usuario chatUser;
-    private FirebaseUser currentUser;
-    private DatabaseReference myConversation;
-    private DatabaseReference externalConversation;
-    private DatabaseReference chatReference;
-    private ArrayList<Mensaje> messages;
     private ValueEventListener valueEventListener;
     private RecyclerView.LayoutManager layoutManager;
     private ChatAdapter adapter;
     private final String message_Type_message = "1";
     private final String message_Type_image = "2";
-
+    private AuthFacade authFacade;
+    private SocialFacade socialFacade;
     private FirebaseStorage storage;
-    private StorageReference chatImgReference;
 
 
     @Override
@@ -75,19 +65,15 @@ public class ChatActivity extends AppCompatActivity {
         getFirebaseComponents();
         initializeRecycleView();
         addListeners();
-
-
-        this.messages = new ArrayList<>();
-
-
     }
 
 
     @Override
     protected void onStart() {
         super.onStart();
+        this.authFacade = new AuthFacade();
+        this.socialFacade = new SocialFacade();
         changeChatLayoutValues();
-
     }
 
     public void getLayoutComponents() {
@@ -101,14 +87,10 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     public void getIntentUser() {
-
         Usuario usuario = (Usuario) getIntent().getSerializableExtra("UserChat");
-
         if (usuario != null) {
             this.chatUser = usuario;
         }
-
-
     }
 
 
@@ -120,19 +102,15 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     public void getFirebaseComponents() {
-        FirebaseAuth auth = FirebaseAuth.getInstance();
-        currentUser = auth.getCurrentUser();
-        chatReference = FirebaseDatabase.getInstance().getReference("BaseDatos").child("Chat");
-        myConversation = chatReference.child(currentUser.getUid());
-        externalConversation = chatReference.child(chatUser.getUid());
+        socialFacade.getChatById(authFacade.getUser().getUid());
         storage = FirebaseStorage.getInstance();
-
-
     }
 
     public void initializeRecycleView() {
         this.layoutManager = new LinearLayoutManager(getApplicationContext());
-        adapter = new ChatAdapter(getApplicationContext(), currentUser.getUid());
+        adapter = (ChatAdapter) AdapterFactory.getAdapter(AdapterEnum.CHAT);
+        adapter.setCurrentUserUID(authFacade.getUser().getUid());
+        adapter.setMyContext(getApplicationContext());
 
         adapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
             @Override
@@ -164,25 +142,21 @@ public class ChatActivity extends AppCompatActivity {
         this.valueEventListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                //restartAdapter();
-
-
                 for (DataSnapshot dataSnap : dataSnapshot.getChildren()) {
                     Mensaje msg = dataSnap.getValue(Mensaje.class);
 
-                    if (msg.getSenderUID().equals(currentUser.getUid())) {
-                        if (msg.getDestinyUUID().equals(chatUser.getUid())) {
+                    if (Objects.requireNonNull(msg).getSenderUID().equals(authFacade.getUser().getUid())) {
+                        if (msg.getDestinyUUID().equals(chatUser.getUid()))
                             adapter.addMessage(msg);
-                        }
+
                     } else if (msg.getSenderUID().equals(chatUser.getUid())) {
-                        if (msg.getDestinyUUID().equals(currentUser.getUid())) {
+                        if (msg.getDestinyUUID().equals(authFacade.getUser().getUid()))
                             adapter.addMessage(msg);
-                        }
                     }
+                    messageList.setAdapter(adapter);
+
+
                 }
-                messageList.setAdapter(adapter);
-
-
             }
 
             @Override
@@ -191,48 +165,42 @@ public class ChatActivity extends AppCompatActivity {
             }
         };
 
-        myConversation.addValueEventListener(valueEventListener);
+        socialFacade.getChatById(authFacade.getUser().getUid()).addValueEventListener(valueEventListener);
     }
 
 
     @Override
     protected void onPause() {
         super.onPause();
-        myConversation.removeEventListener(valueEventListener);
+        socialFacade.getChatById(authFacade.getUser().getUid()).removeEventListener(valueEventListener);
     }
 
     public void addListeners() {
-        galleryButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                intent.setType("image/jpeg");
-                intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
-                startActivityForResult(Intent.createChooser(intent, "Send a photo"), OK_PHOTO);
-            }
+        galleryButton.setOnClickListener(v -> {
+            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+            intent.setType("image/jpeg");
+            intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
+            startActivityForResult(Intent.createChooser(intent, "Send a photo"), OK_PHOTO);
         });
 
-        sendButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String message = messageInput.getText().toString();
-                String time = getMessageTime();
+        sendButton.setOnClickListener(v -> {
+            String message = messageInput.getText().toString();
+            String time = getMessageTime();
 
-                if (!message.isEmpty()) {
-                    Mensaje mensaje = new Mensaje.Builder()
-                            .senderUID(currentUser.getUid())
-                            .destinyUUID(chatUser.getUid())
-                            .senderDisplayName(chatUser.getDisplayName())
-                            .photoUrl(Objects.requireNonNull(currentUser.getPhotoUrl()).toString())
-                            .senderTime(time)
-                            .message(message)
-                            .message_type(message_Type_message)
-                            .create();
+            if (!message.isEmpty()) {
+                Mensaje mensaje = new Mensaje.Builder()
+                        .senderUID(authFacade.getUser().getUid())
+                        .destinyUUID(chatUser.getUid())
+                        .senderDisplayName(chatUser.getDisplayName())
+                        .photoUrl(Objects.requireNonNull(authFacade.getUser().getPhotoUrl()).toString())
+                        .senderTime(time)
+                        .message(message)
+                        .message_type(message_Type_message)
+                        .create();
 
-                    myConversation.push().setValue(mensaje);
-                    externalConversation.push().setValue(mensaje);
-                    messageInput.setText("");
-                }
+                socialFacade.getChatById(authFacade.getUser().getUid()).push().setValue(mensaje);
+                socialFacade.getChatById(chatUser.getUid()).push().setValue(mensaje);
+                messageInput.setText("");
             }
         });
 
@@ -240,8 +208,8 @@ public class ChatActivity extends AppCompatActivity {
 
 
     public String getMessageTime() {
-        String returnString = "";
-        String amPm = "";
+        String returnString;
+        String amPm;
         Calendar time = new GregorianCalendar();
         int hour = time.get(Calendar.HOUR);
         int minute = time.get(Calendar.MINUTE);
@@ -252,9 +220,7 @@ public class ChatActivity extends AppCompatActivity {
         } else {
             amPm = "p.m.";
         }
-
         returnString = hour + ":" + minute + " " + amPm;
-
         return returnString;
     }
 
@@ -262,46 +228,36 @@ public class ChatActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-
         if (requestCode == OK_PHOTO && resultCode == RESULT_OK) {
-            Uri photo = data.getData();
-            chatImgReference = storage.getReference("Chat_reference");
+            Uri photo = Objects.requireNonNull(data).getData();
+            StorageReference chatImgReference = storage.getReference("Chat_reference");
             final StorageReference referencePhoto = chatImgReference.child(photo.getLastPathSegment());
-
 
             UploadTask uploadTask = referencePhoto.putFile(photo);
 
-            uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
-                @Override
-                public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
-                    if (!task.isSuccessful()) {
-                        throw Objects.requireNonNull(task.getException());
-                    }
-
-                    // Continue with the task to get the download URL
-                    return referencePhoto.getDownloadUrl();
+            uploadTask.continueWithTask(task -> {
+                if (!task.isSuccessful()) {
+                    throw Objects.requireNonNull(task.getException());
                 }
-            }).addOnCompleteListener(new OnCompleteListener<Uri>() {
-                @Override
-                public void onComplete(@NonNull Task<Uri> task) {
-                    if (task.isSuccessful()) {
-                        String time = getMessageTime();
-                        Mensaje mensaje = new Mensaje.Builder()
-                                .senderUID(currentUser.getUid())
-                                .destinyUUID(chatUser.getUid())
-                                .senderDisplayName(chatUser.getDisplayName())
-                                .photoUrl(Objects.requireNonNull(currentUser.getPhotoUrl()).toString())
-                                .senderTime(time)
-                                .message(" ha enviado una foto.")
-                                .message_type(message_Type_image)
-                                .create();
 
-                        myConversation.push().setValue(mensaje);
-                        externalConversation.push().setValue(mensaje);
-                    }
+                return referencePhoto.getDownloadUrl();
+            }).addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    String time = getMessageTime();
+                    Mensaje mensaje = new Mensaje.Builder()
+                            .senderUID(authFacade.getUser().getUid())
+                            .destinyUUID(chatUser.getUid())
+                            .senderDisplayName(chatUser.getDisplayName())
+                            .photoUrl(Objects.requireNonNull(authFacade.getUser().getPhotoUrl()).toString())
+                            .senderTime(time)
+                            .message(" ha enviado una foto.")
+                            .message_type(message_Type_image)
+                            .create();
+
+                    socialFacade.getChatById(authFacade.getUser().getUid()).push().setValue(mensaje);
+                    socialFacade.getChatById(chatUser.getUid()).push().setValue(mensaje);
                 }
             });
-
         }
     }
 }

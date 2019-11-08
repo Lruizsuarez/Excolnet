@@ -18,9 +18,10 @@ import java.util.ArrayList;
 
 import co.edu.konradlorenz.excolnet.Activities.SitesActivity;
 import co.edu.konradlorenz.excolnet.Entities.Host;
+import co.edu.konradlorenz.excolnet.Factory.Adapter;
 import co.edu.konradlorenz.excolnet.R;
 
-public class HostAdapter extends RecyclerView.Adapter<HostAdapter.HostHolder> {
+public class HostAdapter extends RecyclerView.Adapter<HostAdapter.HostHolder>  implements Adapter {
 
     private ArrayList<Host> hosts;
     private CardView cardViewHosts;
@@ -28,12 +29,29 @@ public class HostAdapter extends RecyclerView.Adapter<HostAdapter.HostHolder> {
     private String ACTIVITY_NAME = "HostAdapter";
     private View view;
 
+    public HostAdapter() {
+    }
 
     public HostAdapter(Context context, ArrayList<Host> hosts) {
         this.hosts = hosts;
         this.context = context;
     }
 
+    public ArrayList<Host> getHosts() {
+        return hosts;
+    }
+
+    public void setHosts(ArrayList<Host> hosts) {
+        this.hosts = hosts;
+    }
+
+    public Context getContext() {
+        return context;
+    }
+
+    public void setContext(Context context) {
+        this.context = context;
+    }
 
     @NonNull
     @Override
@@ -50,19 +68,16 @@ public class HostAdapter extends RecyclerView.Adapter<HostAdapter.HostHolder> {
         holder.descripcionHost.setText(hosts.get(position).getDescripcionHost());
         holder.precioHost.setText(hosts.get(position).getPrecioHost());
         Glide.with(context).load(hosts.get(position).getImagenHost()).into(holder.imagenHost);
-        cardViewHosts.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(view.getContext(), SitesActivity.class);
-                intent.putExtra("id", hosts.get(position).getId());
-                intent.putExtra("nameActivity", ACTIVITY_NAME);
+        cardViewHosts.setOnClickListener(v -> {
+            Intent intent = new Intent(view.getContext(), SitesActivity.class);
+            intent.putExtra("id", hosts.get(position).getId());
+            intent.putExtra("nameActivity", ACTIVITY_NAME);
 
-                intent.putExtra("latitud", hosts.get(position).getLatitud());
-                intent.putExtra("longitud", hosts.get(position).getLongitud());
-                intent.putExtra("titulo", hosts.get(position).getNombreHost());
+            intent.putExtra("latitud", hosts.get(position).getLatitud());
+            intent.putExtra("longitud", hosts.get(position).getLongitud());
+            intent.putExtra("titulo", hosts.get(position).getNombreHost());
 
-                view.getContext().startActivity(intent);
-            }
+            view.getContext().startActivity(intent);
         });
     }
 

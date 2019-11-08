@@ -32,7 +32,9 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import co.edu.konradlorenz.excolnet.Entities.Usuario;
 import co.edu.konradlorenz.excolnet.R;
+import co.edu.konradlorenz.excolnet.Repository.AuthFacade;
 
 public class RegisterActivity extends AppCompatActivity {
 
@@ -47,7 +49,7 @@ public class RegisterActivity extends AppCompatActivity {
     private Uri selectedImage;
     private ProgressBar registration_progressbar;
     private ConstraintLayout register_layout;
-    private FirebaseAuth firebaseAuth;
+    private AuthFacade authFacade;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,7 +59,7 @@ public class RegisterActivity extends AppCompatActivity {
         getLayoutComponents();
         buttonsController();
 
-        firebaseAuth = FirebaseAuth.getInstance();
+        authFacade = new AuthFacade();
     }
 
     public void addUser() {
@@ -122,11 +124,9 @@ public class RegisterActivity extends AppCompatActivity {
         }
 
 
-        final String userCompleteName = Objects.requireNonNull(usernameTextInput.getText()).toString().trim() + " " + Objects.requireNonNull(lastnameTextInput.getText()).toString().trim();
+        final String userCompleteName = Objects.requireNonNull(usernameTextInput.getText()).toString().trim().concat(" ").concat(Objects.requireNonNull(lastnameTextInput.getText()).toString().trim());
 
         if (cancel) {
-            // There was an error; don't attempt login and focus the first
-            // form field with an error.
             if (notSelected) {
                 alertNullImage();
             } else {
@@ -135,13 +135,13 @@ public class RegisterActivity extends AppCompatActivity {
         } else {
 
             registration_progressbar.setVisibility(View.VISIBLE);
-            firebaseAuth.createUserWithEmailAndPassword(emailAdress, password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+            authFacade.getAuth().createUserWithEmailAndPassword(emailAdress, password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
                 @Override
                 public void onComplete(@NonNull Task<AuthResult> task) {
                     registration_progressbar.setVisibility(View.GONE);
                     if (task.isSuccessful()) {
 
-                        FirebaseUser user = firebaseAuth.getCurrentUser();
+                        FirebaseUser user = authFacade.getUser();
 
                         UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
                                 .setDisplayName(userCompleteName)
@@ -150,12 +150,15 @@ public class RegisterActivity extends AppCompatActivity {
 
                         assert user != null;
                         user.updateProfile(profileUpdates)
-                                .addOnCompleteListener(new OnCompleteListener<Void>() {
-                                    @Override
-                                    public void onComplete(@NonNull Task<Void> task) {
-                                        if (task.isSuccessful()) {
-                                            Snackbar.make(register_layout, "User Created", Snackbar.LENGTH_SHORT).show();
-                                        }
+                                .addOnCompleteListener(task1 -> {
+                                    if (task1.isSuccessful()) {
+                                        authFacade.saveUser(new Usuario.Builder()
+                                        .displayName(userCompleteName)
+                                        .email(emailAdress)
+                                        .photoUrl(selectedImage.toString())
+                                        .uid(user.getUid())
+                                        .create());
+                                        Snackbar.make(register_layout, "User Created", Snackbar.LENGTH_SHORT).show();
                                     }
                                 });
 
@@ -171,19 +174,9 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     public void buttonsController() {
-        selectImageButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                imageChooser();
-            }
-        });
+        selectImageButton.setOnClickListener(v -> imageChooser());
 
-        signInButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                addUser();
-            }
-        });
+        signInButton.setOnClickListener(v -> addUser());
     }
 
     public void imageChooser() {
@@ -206,20 +199,18 @@ public class RegisterActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        switch (requestCode) {
-            case PICK_IMAGE_REQUEST:
-                if (resultCode == RESULT_OK) {
-                    assert data != null;
-                    selectedImage = data.getData();
+        if (requestCode == PICK_IMAGE_REQUEST) {
+            if (resultCode == RESULT_OK) {
+                assert data != null;
+                selectedImage = data.getData();
 
-                    try {
-                        Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), selectedImage);
-                        imageRegisterInput.setImageBitmap(bitmap);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                try {
+                    Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), selectedImage);
+                    imageRegisterInput.setImageBitmap(bitmap);
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-                break;
+            }
         }
     }
 

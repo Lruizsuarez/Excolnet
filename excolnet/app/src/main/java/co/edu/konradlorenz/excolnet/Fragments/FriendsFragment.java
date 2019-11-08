@@ -59,7 +59,7 @@ public class FriendsFragment extends Fragment {
 
     private void initializeAtributtes() {
         this.databaseReference = FirebaseDatabase.getInstance().getReference("BaseDatos");
-        this.friendsList = (RecyclerView) getView().findViewById(R.id.friends_list);
+        this.friendsList = getView().findViewById(R.id.friends_list);
         this.friendsArray = new ArrayList<>();
         this.lManager = new LinearLayoutManager(getContext());
 

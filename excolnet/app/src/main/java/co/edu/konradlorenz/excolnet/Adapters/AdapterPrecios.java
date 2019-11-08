@@ -13,16 +13,36 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 
 import co.edu.konradlorenz.excolnet.Entities.Precios;
+import co.edu.konradlorenz.excolnet.Factory.Adapter;
 import co.edu.konradlorenz.excolnet.R;
 
-public class AdapterPrecios extends RecyclerView.Adapter<AdapterPrecios.PriceHolder> {
+public class AdapterPrecios extends RecyclerView.Adapter<AdapterPrecios.PriceHolder> implements Adapter {
     private Context mContext;
     List<Precios> precios_items;
     private View view;
     CardView cardView;
 
+    public AdapterPrecios() {
+    }
+
     public AdapterPrecios(Context mContext, List<Precios> precios_items) {
         this.mContext = mContext;
+        this.precios_items = precios_items;
+    }
+
+    public Context getmContext() {
+        return mContext;
+    }
+
+    public void setmContext(Context mContext) {
+        this.mContext = mContext;
+    }
+
+    public List<Precios> getPrecios_items() {
+        return precios_items;
+    }
+
+    public void setPrecios_items(List<Precios> precios_items) {
         this.precios_items = precios_items;
     }
 

@@ -16,14 +16,34 @@ import com.bumptech.glide.request.RequestOptions;
 import java.util.ArrayList;
 
 import co.edu.konradlorenz.excolnet.Entities.Comentario;
+import co.edu.konradlorenz.excolnet.Factory.Adapter;
 import co.edu.konradlorenz.excolnet.R;
 
-public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentHolder> {
+public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentHolder>   implements Adapter {
     private ArrayList<Comentario> items;
     private Context context;
 
+    public CommentAdapter() {
+    }
+
     public CommentAdapter(ArrayList<Comentario> items, Context context) {
         this.items = items;
+        this.context = context;
+    }
+
+    public ArrayList<Comentario> getItems() {
+        return items;
+    }
+
+    public void setItems(ArrayList<Comentario> items) {
+        this.items = items;
+    }
+
+    public Context getContext() {
+        return context;
+    }
+
+    public void setContext(Context context) {
         this.context = context;
     }
 

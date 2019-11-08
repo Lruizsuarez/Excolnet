@@ -15,6 +15,9 @@ public class Usuario implements Serializable {
     private String photoUrl;
     private String uid;
 
+    public Usuario() {
+    }
+
     private Usuario(final Builder builder) {
         this.displayName = builder.displayName;
         this.email = builder.email;

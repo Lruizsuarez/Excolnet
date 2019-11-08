@@ -47,12 +47,9 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FacebookAuthProvider;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.auth.TwitterAuthProvider;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.twitter.sdk.android.core.Callback;
 import com.twitter.sdk.android.core.DefaultLogger;
 import com.twitter.sdk.android.core.Result;
@@ -70,6 +67,7 @@ import java.util.Objects;
 import co.edu.konradlorenz.excolnet.Entities.Usuario;
 import co.edu.konradlorenz.excolnet.Fragments.PasswordRecoveryFragment;
 import co.edu.konradlorenz.excolnet.R;
+import co.edu.konradlorenz.excolnet.Repository.AuthFacade;
 
 import static android.Manifest.permission.READ_CONTACTS;
 
@@ -78,7 +76,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private static final int RC_SIGN_IN = 101;
     private static final int REQUEST_READ_CONTACTS = 0;
 
-    private FirebaseAuth mAuth;
     private EditText mPasswordView;
     private Button mEmailSignInButton;
     private Button googleSignInButton;
@@ -90,6 +87,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private TwitterLoginButton loginTwitterButton;
     private GoogleSignInClient mGoogleSignInClient;
     private TextView sign_up_button;
+    private AuthFacade authFacade;
 
     private void populateAutoComplete() {
         if (!mayRequestContacts()) {
@@ -126,17 +124,18 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         mEmailView.setAdapter(adapter);
     }
 
-    // verificar el api level para mostrar el progressbar (cargando..) ---------------------------------------------------------------------------------------------------------------------------------
+
     @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
     private void showProgress(final boolean show) {
         mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
     }
 
-    // metodos heredados de activity para el correcto funcionamiento de la aplicacion ------------------------------------------------------------------------------------------------------------------
     @Override
     public void onStart() {
         super.onStart();
-        if (mAuth.getCurrentUser() != null) {
+        authFacade = new AuthFacade();
+
+        if (authFacade.getAuth().getCurrentUser() != null) {
             logInSucceed();
         } else {
             showProgress(false);
@@ -150,7 +149,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         setContentView(R.layout.activity_login);
         getLayoutComponents();
         populateAutoComplete();
-        googleFirebaseComponents();
         googleSignInComponents();
         facebookSignInComponents();
         createListeners();
@@ -249,9 +247,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         loginFacebookButton.setReadPermissions("email", "public_profile");
     }
 
-    private void googleFirebaseComponents() {
-        mAuth = FirebaseAuth.getInstance();
-    }
 
     private void googleSignIn() {
         showProgress(true);
@@ -379,7 +374,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             focusView.requestFocus();
         } else {
             showProgress(true);
-            mAuth.signInWithEmailAndPassword(email, password)
+            authFacade.getAuth().signInWithEmailAndPassword(email, password)
                     .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                         @Override
                         public void onComplete(@NonNull Task<AuthResult> task) {
@@ -412,7 +407,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     }
 
     private void credentialFirebaseSingIn(AuthCredential credential) {
-        mAuth.signInWithCredential(credential)
+        authFacade.getAuth().signInWithCredential(credential)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
@@ -431,18 +426,14 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     }
 
     private void logInSucceed() {
-        FirebaseUser user = mAuth.getCurrentUser();
-        DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
+        FirebaseUser user = authFacade.getUser();
         assert user != null;
-
-        Usuario newUser = new Usuario.Builder()
+        authFacade.saveUser(new Usuario.Builder()
                 .displayName(user.getDisplayName())
                 .email(user.getEmail())
                 .photoUrl(Objects.requireNonNull(user.getPhotoUrl()).toString())
                 .uid(user.getUid())
-                .create();
-
-        mDatabase.child("BaseDatos").child("Users").child(user.getUid()).setValue(newUser);
+                .create());
         Intent i = new Intent(LoginActivity.this, PrincipalActivity.class);
         i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
         showProgress(false);

@@ -16,6 +16,9 @@ public class Publicacion implements Serializable {
     private String imagen;
 
 
+    public Publicacion() {
+    }
+
     private Publicacion(final Builder builder) {
         this.comentarios = new ArrayList<>();
         this.usuariosQueGustan = new ArrayList<>();

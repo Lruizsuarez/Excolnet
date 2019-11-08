@@ -18,9 +18,10 @@ import java.util.ArrayList;
 
 import co.edu.konradlorenz.excolnet.Activities.SitesActivity;
 import co.edu.konradlorenz.excolnet.Entities.Lugar;
+import co.edu.konradlorenz.excolnet.Factory.Adapter;
 import co.edu.konradlorenz.excolnet.R;
 
-public class SiteAdapter extends RecyclerView.Adapter<SiteAdapter.SiteHolder> {
+public class SiteAdapter extends RecyclerView.Adapter<SiteAdapter.SiteHolder>  implements Adapter {
 
     private ArrayList<Lugar> lugares;
     private CardView cardViewLugares;
@@ -28,12 +29,29 @@ public class SiteAdapter extends RecyclerView.Adapter<SiteAdapter.SiteHolder> {
     private String ACTIVITY_NAME = "SitesAdapter";
     private View view;
 
+    public SiteAdapter() {
+    }
 
     public SiteAdapter(Context context, ArrayList<Lugar> lugares) {
         this.lugares = lugares;
         this.context = context;
     }
 
+    public ArrayList<Lugar> getLugares() {
+        return lugares;
+    }
+
+    public void setLugares(ArrayList<Lugar> lugares) {
+        this.lugares = lugares;
+    }
+
+    public Context getContext() {
+        return context;
+    }
+
+    public void setContext(Context context) {
+        this.context = context;
+    }
 
     @NonNull
     @Override
@@ -48,19 +66,16 @@ public class SiteAdapter extends RecyclerView.Adapter<SiteAdapter.SiteHolder> {
         holder.tituloSite.setText(lugares.get(position).getTitulo());
         holder.descripcionSite.setText(lugares.get(position).getDescripcion());
         Glide.with(context).load(lugares.get(position).getImagen_lugar()).into(holder.imagenSite);
-        cardViewLugares.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(view.getContext(), SitesActivity.class);
-                intent.putExtra("id", lugares.get(position).getId());
-                intent.putExtra("latitud", lugares.get(position).getLatitud());
-                intent.putExtra("nameActivity", ACTIVITY_NAME);
+        cardViewLugares.setOnClickListener(v -> {
+            Intent intent = new Intent(view.getContext(), SitesActivity.class);
+            intent.putExtra("id", lugares.get(position).getId());
+            intent.putExtra("latitud", lugares.get(position).getLatitud());
+            intent.putExtra("nameActivity", ACTIVITY_NAME);
 
-                intent.putExtra("longitud", lugares.get(position).getLongitud());
-                intent.putExtra("titulo", lugares.get(position).getTitulo());
+            intent.putExtra("longitud", lugares.get(position).getLongitud());
+            intent.putExtra("titulo", lugares.get(position).getTitulo());
 
-                view.getContext().startActivity(intent);
-            }
+            view.getContext().startActivity(intent);
         });
     }
 
@@ -73,15 +88,6 @@ public class SiteAdapter extends RecyclerView.Adapter<SiteAdapter.SiteHolder> {
     public int getItemCount() {
         return lugares.size();
     }
-
-    public ArrayList<Lugar> getLugares() {
-        return lugares;
-    }
-
-    public void setLugares(ArrayList<Lugar> lugares) {
-        this.lugares = lugares;
-    }
-
 
     static class SiteHolder extends RecyclerView.ViewHolder {
         ImageView imagenSite;

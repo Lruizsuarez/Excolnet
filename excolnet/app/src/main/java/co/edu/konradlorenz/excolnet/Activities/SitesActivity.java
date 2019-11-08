@@ -31,6 +31,7 @@ import com.google.android.libraries.places.api.net.PlacesClient;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import co.edu.konradlorenz.excolnet.Entities.Host;
 import co.edu.konradlorenz.excolnet.R;
@@ -48,8 +49,6 @@ public class SitesActivity extends AppCompatActivity implements OnMapReadyCallba
     private double longitud;
     private String titulo = "";
     private String nameActivityEntrante;
-    private double[] latitudes;
-    private double[] longitudes;
     private List<Host> sitios;
     private PlacesClient mPlacesClient;
     private FusedLocationProviderClient mFusedLocationProviderClient;
@@ -61,19 +60,19 @@ public class SitesActivity extends AppCompatActivity implements OnMapReadyCallba
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sites);
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
+        assert mapFragment != null;
         mapFragment.getMapAsync(this);
         latitud = 4.6420828;
         longitud = -78.8355855;
 
-        String id = getIntent().getExtras().getString("id");
-        Double lat = getIntent().getExtras().getDouble("latitud");
+        Double lat = Objects.requireNonNull(getIntent().getExtras()).getDouble("latitud");
         Double lon = getIntent().getExtras().getDouble("longitud");
         titulo = getIntent().getExtras().getString("titulo");
         nameActivityEntrante = getIntent().getExtras().getString("nameActivity");
 
+        assert nameActivityEntrante != null;
         if (nameActivityEntrante.equals("Housing")) {
 
             sitios = (ArrayList<Host>) getIntent().getSerializableExtra("Hosts");
@@ -92,7 +91,7 @@ public class SitesActivity extends AppCompatActivity implements OnMapReadyCallba
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        // Set up the views
+
         String apiKey = getString(R.string.google_maps_key);
         Places.initialize(getApplicationContext(), apiKey);
         mPlacesClient = Places.createClient(this);
@@ -113,16 +112,15 @@ public class SitesActivity extends AppCompatActivity implements OnMapReadyCallba
                         title(sitio.getNombreHost()).snippet(sitio.getPrecioHost()));
                 hostm.showInfoWindow();
             }
-            float zoomLevel = (float) 6.0f;
+            float zoomLevel = 6.0f;
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(sitios.get(0).getLatitud(), sitios.get(0).getLongitud()), zoomLevel));
         } else {
             LatLng site = new LatLng(latitud, longitud);
             mMap.addMarker(new MarkerOptions().position(site).title(titulo));
 
 
-            float zoomLevel = (float) 16.0f;
+            float zoomLevel =  16.0f;
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(site, zoomLevel));
-            //Permite el control del zoom de la camara en el mapa
             mMap.getUiSettings().setZoomControlsEnabled(true);
             if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 getLocationPermission();
@@ -146,15 +144,11 @@ public class SitesActivity extends AppCompatActivity implements OnMapReadyCallba
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_geolocate:
-                pickCurrentPlace();
-                return true;
-
-            default:
-                return super.onOptionsItemSelected(item);
-
+        if (item.getItemId() == R.id.action_geolocate) {
+            pickCurrentPlace();
+            return true;
         }
+        return super.onOptionsItemSelected(item);
     }
 
     private void getLocationPermission() {
@@ -170,25 +164,19 @@ public class SitesActivity extends AppCompatActivity implements OnMapReadyCallba
     }
 
     public void onRequestPermissionsResult(int requestCode,
-                                           @NonNull String permissions[],
+                                           @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         mLocationPermissionGranted = false;
-        switch (requestCode) {
-            case PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION: {
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    mLocationPermissionGranted = true;
-                }
+        if (requestCode == PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION) {
+            if (grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                mLocationPermissionGranted = true;
             }
         }
     }
 
 
     private void getDeviceLocation() {
-        /*
-         * Get the best and most recent location of the device, which may be null in rare
-         * cases when a location is not available.
-         */
         try {
             if (mLocationPermissionGranted) {
                 Task<Location> locationResult = mFusedLocationProviderClient.getLastLocation();
@@ -196,7 +184,6 @@ public class SitesActivity extends AppCompatActivity implements OnMapReadyCallba
                     @Override
                     public void onComplete(@NonNull Task<Location> task) {
                         if (task.isSuccessful()) {
-                            // Set the map's camera position to the current location of the device.
                             mLastKnownLocation = task.getResult();
                             if (mLastKnownLocation != null) {
                                 Log.d(TAG, "Latitude: " + mLastKnownLocation.getLatitude());
@@ -236,16 +223,13 @@ public class SitesActivity extends AppCompatActivity implements OnMapReadyCallba
         if (mLocationPermissionGranted) {
             getDeviceLocation();
         } else {
-            // The user has not granted permission.
             Log.i(TAG, "The user did not grant location permission.");
 
-            // Add a default marker, because the user hasn't selected a place.
             mMap.addMarker(new MarkerOptions()
                     .title(getString(R.string.app_name))
                     .position(mDefaultLocation)
             );
 
-            // Prompt the user for permission.
             getLocationPermission();
         }
     }

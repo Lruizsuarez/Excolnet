@@ -22,18 +22,19 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 
 import co.edu.konradlorenz.excolnet.Adapters.AdapterSearch;
 import co.edu.konradlorenz.excolnet.Entities.Usuario;
+import co.edu.konradlorenz.excolnet.Factory.AdapterEnum;
+import co.edu.konradlorenz.excolnet.Factory.AdapterFactory;
 import co.edu.konradlorenz.excolnet.Fragments.BottomSheetNavigationFragment;
 import co.edu.konradlorenz.excolnet.Fragments.NewPuplicationFragment;
 import co.edu.konradlorenz.excolnet.Fragments.PublicationsFragment;
 import co.edu.konradlorenz.excolnet.R;
+import co.edu.konradlorenz.excolnet.Repository.AuthFacade;
 import co.edu.konradlorenz.excolnet.Utils.Permissions;
 
 public class PrincipalActivity extends AppCompatActivity {
@@ -42,31 +43,24 @@ public class PrincipalActivity extends AppCompatActivity {
     private String ACTIVITY_NAME = "PrincipalActivity";
     private BottomAppBar bottomAppBar;
     private FirebaseUser user;
-    private DatabaseReference mDatabase;
     private ArrayList<Usuario> listaUsuarios;
     private FloatingActionButton fabPublications;
     private RecyclerView recyclerView;
     private SearchView searchView;
+    private AuthFacade authFacade;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_principal);
 
-
         findMaterialElements();
         setSupportActionBar(bottomAppBar);
         fabPublicationsHandler();
 
-        if (checkPermissionsArray(Permissions.PERMISSIONS)) {
-
-        } else {
+        if (!checkPermissionsArray(Permissions.PERMISSIONS)) {
             verifyPermissions(Permissions.PERMISSIONS);
         }
-
-
-        //Search
-        mDatabase = FirebaseDatabase.getInstance().getReference("BaseDatos");
         recyclerView = findViewById(R.id.recyclerViewSearch);
         searchView = findViewById(R.id.searchView);
 
@@ -74,15 +68,16 @@ public class PrincipalActivity extends AppCompatActivity {
         FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
         ft.replace(R.id.contenido, fragment);
         ft.commit();
-
     }
 
     @Override
     protected void onStart() {
         super.onStart();
+        authFacade = new AuthFacade();
         listaUsuarios = new ArrayList<>();
-        DatabaseReference usuarios = mDatabase.child("Users");
-        usuarios.addValueEventListener(new ValueEventListener() {
+        user = authFacade.getUser();
+
+        authFacade.getUsers().addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
@@ -123,7 +118,9 @@ public class PrincipalActivity extends AppCompatActivity {
                 myListUsuarios.add(usuarioBuscado);
             }
         }
-        AdapterSearch adapterSearch = new AdapterSearch(getApplicationContext(), myListUsuarios);
+        AdapterSearch adapterSearch = (AdapterSearch) AdapterFactory.getAdapter(AdapterEnum.BUSQUEDA);
+        adapterSearch.setContext(getApplicationContext());
+        adapterSearch.setList(myListUsuarios);
         recyclerView.setHasFixedSize(true);
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
         recyclerView.setLayoutManager(mLayoutManager);
@@ -135,20 +132,15 @@ public class PrincipalActivity extends AppCompatActivity {
         fabPublications = findViewById(R.id.fab_publications);
     }
 
-    //Maneja el botón central flotante de agregar publicaciones.
     private void fabPublicationsHandler() {
-        fabPublications.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Fragment fragment = new NewPuplicationFragment();
-                FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-                ft.replace(R.id.principal, fragment);
-                ft.commit();
-            }
+        fabPublications.setOnClickListener(view -> {
+            Fragment fragment = new NewPuplicationFragment();
+            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+            ft.replace(R.id.principal, fragment);
+            ft.commit();
         });
     }
 
-    //Maneja las opciones del menú del Bottom App Bar
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -178,17 +170,12 @@ public class PrincipalActivity extends AppCompatActivity {
     }
 
     private Usuario obtenerUsuario() {
-        for (Usuario usuario : listaUsuarios) {
-            if (usuario.getDisplayName().equals(user.getDisplayName())) {
-                return usuario;
-            }
-        }
-        return null;
+        return listaUsuarios.stream()
+                .filter(x -> x.getDisplayName().equals(user.getDisplayName()))
+                .findFirst().orElse(null);
     }
 
-    // Ejecuta el efecto del Bottom App Bar
     public void runFabEffect(View view) {
-        //check the fab alignment mode and toggle accordingly
         if (bottomAppBar.getFabAlignmentMode() == BottomAppBar.FAB_ALIGNMENT_MODE_END) {
             bottomAppBar.setFabAlignmentMode(BottomAppBar.FAB_ALIGNMENT_MODE_CENTER);
         } else {
@@ -196,7 +183,6 @@ public class PrincipalActivity extends AppCompatActivity {
         }
     }
 
-    // Llena el Bottom App Bar con los 3 íconos disponibles.
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.bottom_bar_menu, menu);

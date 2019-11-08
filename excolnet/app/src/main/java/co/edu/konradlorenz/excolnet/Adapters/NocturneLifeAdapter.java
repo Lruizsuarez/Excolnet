@@ -20,15 +20,19 @@ import java.util.ArrayList;
 
 import co.edu.konradlorenz.excolnet.Activities.SitesActivity;
 import co.edu.konradlorenz.excolnet.Entities.Interes;
+import co.edu.konradlorenz.excolnet.Factory.Adapter;
 import co.edu.konradlorenz.excolnet.R;
 import de.hdodenhof.circleimageview.CircleImageView;
 
-public class NocturneLifeAdapter extends RecyclerView.Adapter<NocturneLifeAdapter.TopicHolder> {
+public class NocturneLifeAdapter extends RecyclerView.Adapter<NocturneLifeAdapter.TopicHolder>  implements Adapter {
 
     public View view;
     public CardView commonsCardView;
     private ArrayList<Interes> currentInterests;
     private Context myContext;
+
+    public NocturneLifeAdapter() {
+    }
 
     public NocturneLifeAdapter(ArrayList<Interes> interest, Context context){
             this.currentInterests = interest;
@@ -36,11 +40,27 @@ public class NocturneLifeAdapter extends RecyclerView.Adapter<NocturneLifeAdapte
 
     }
 
+    public ArrayList<Interes> getCurrentInterests() {
+        return currentInterests;
+    }
+
+    public void setCurrentInterests(ArrayList<Interes> currentInterests) {
+        this.currentInterests = currentInterests;
+    }
+
+    public Context getMyContext() {
+        return myContext;
+    }
+
+    public void setMyContext(Context myContext) {
+        this.myContext = myContext;
+    }
+
     @NonNull
     @Override
     public TopicHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         view = LayoutInflater.from(parent.getContext()).inflate(R.layout.commoncard, parent, false);
-        commonsCardView = (CardView) view.findViewById(R.id.common_card);
+        commonsCardView = view.findViewById(R.id.common_card);
 
         NocturneLifeAdapter.TopicHolder topicHolder = new NocturneLifeAdapter.TopicHolder(view);
 
@@ -91,7 +111,6 @@ public class NocturneLifeAdapter extends RecyclerView.Adapter<NocturneLifeAdapte
         private TextView dynamicIcon;
         private LinearLayout principalLayout;
 
-        //For get Location
         private Double latitude;
         private Double longitude;
 
@@ -115,7 +134,6 @@ public class NocturneLifeAdapter extends RecyclerView.Adapter<NocturneLifeAdapte
             locationButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                   // Toast.makeText(locationButton.getContext() , "hola" , Toast.LENGTH_SHORT).show();
                     Intent intent = new Intent(itemView.getContext() , SitesActivity.class);
                     intent.putExtra("latitud" ,  latitude);
                     intent.putExtra("longitud", longitude);

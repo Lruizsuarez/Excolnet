@@ -23,6 +23,7 @@ import com.google.firebase.database.FirebaseDatabase;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Objects;
 
@@ -31,9 +32,11 @@ import co.edu.konradlorenz.excolnet.Activities.ProfileActivity;
 import co.edu.konradlorenz.excolnet.Entities.Comentario;
 import co.edu.konradlorenz.excolnet.Entities.Publicacion;
 import co.edu.konradlorenz.excolnet.Entities.Usuario;
+import co.edu.konradlorenz.excolnet.Factory.Adapter;
 import co.edu.konradlorenz.excolnet.R;
+import co.edu.konradlorenz.excolnet.Repository.SocialFacade;
 
-public class PublicationAdapter extends RecyclerView.Adapter<PublicationAdapter.PublicationHolder> {
+public class PublicationAdapter extends RecyclerView.Adapter<PublicationAdapter.PublicationHolder>  implements Adapter {
 
     private ArrayList<Publicacion> items;
     private LinearLayout cardViewPublication;
@@ -42,13 +45,42 @@ public class PublicationAdapter extends RecyclerView.Adapter<PublicationAdapter.
     private String ACTIVITY_NAME = "PublicationsAdapter";
     private View view;
     private FirebaseUser user;
+    private SocialFacade socialFacade;
+
+    public PublicationAdapter() {
+        this.socialFacade = new SocialFacade();
+    }
 
     public PublicationAdapter(Context context, ArrayList<Publicacion> items, FirebaseUser user) {
         this.items = items;
         this.context = context;
         this.user = user;
+        this.socialFacade = new SocialFacade();
     }
 
+    public ArrayList<Publicacion> getItems() {
+        return items;
+    }
+
+    public void setItems(ArrayList<Publicacion> items) {
+        this.items = items;
+    }
+
+    public Context getContext() {
+        return context;
+    }
+
+    public void setContext(Context context) {
+        this.context = context;
+    }
+
+    public FirebaseUser getUser() {
+        return user;
+    }
+
+    public void setUser(FirebaseUser user) {
+        this.user = user;
+    }
 
     @NonNull
     @Override
@@ -80,90 +112,75 @@ public class PublicationAdapter extends RecyclerView.Adapter<PublicationAdapter.
             holder.cantidadLikes.setText(items.get(position).getUsuariosQueGustan().size() + " Likes");
             holder.cantidadComentarios.setText(items.get(position).getComentarios().size() + " Comments");
         } catch (NullPointerException e) {
+            Log.e(ACTIVITY_NAME , Arrays.toString(e.getStackTrace()));
         }
 
         Glide.with(context).load(items.get(position).getUsuario().getPhotoUrl()).placeholder(R.drawable.ic_profile).error(R.drawable.com_facebook_profile_picture_blank_square).fitCenter().apply(RequestOptions.circleCropTransform()).into(holder.fotoUsuario);
         Glide.with(context).load(items.get(position).getImagen()).into(holder.imagenPublicacion);
         Glide.with(context).load(user.getPhotoUrl()).placeholder(R.drawable.ic_profile).error(R.drawable.com_facebook_profile_picture_blank_square).fitCenter().apply(RequestOptions.circleCropTransform()).into(holder.fotoUsuarioActual);
 
-        holder.botonComentar.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (holder.comentario.getText().toString() != "") {
-                    String pattern = "yyyy-MM-dd";
-                    SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
-                    String date = simpleDateFormat.format(new Date());
-                    Usuario newUser = new Usuario.Builder()
-                            .displayName(user.getDisplayName())
-                            .email(user.getEmail())
-                            .photoUrl(Objects.requireNonNull(user.getPhotoUrl()).toString())
-                            .uid(user.getUid())
-                            .create();
+        holder.botonComentar.setOnClickListener(v -> {
+            if (holder.comentario.getText().toString() != "") {
+                String pattern = "yyyy-MM-dd";
+                SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
+                String date = simpleDateFormat.format(new Date());
+                Usuario newUser = new Usuario.Builder()
+                        .displayName(user.getDisplayName())
+                        .email(user.getEmail())
+                        .photoUrl(Objects.requireNonNull(user.getPhotoUrl()).toString())
+                        .uid(user.getUid())
+                        .create();
 
-                    items.get(position).getComentarios().add(new Comentario.Builder()
-                            .usuario(newUser)
-                            .texto(holder.comentario.getText().toString())
-                            .fechaComentario(date)
-                            .create());
+                items.get(position).getComentarios().add(new Comentario.Builder()
+                        .usuario(newUser)
+                        .texto(holder.comentario.getText().toString())
+                        .fechaComentario(date)
+                        .create());
 
-                    DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference("BaseDatos");
-                    mDatabase.child("Publicaciones").child(items.get(position).getId()).setValue(items.get(position));
-                    holder.comentario.setText("");
-                }
+                DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference("BaseDatos");
+                mDatabase.child("Publicaciones").child(items.get(position).getId()).setValue(items.get(position));
+                holder.comentario.setText("");
             }
         });
 
-        holder.botonLike.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                boolean likeado = false;
-                Usuario userDislike = null;
-                for (Usuario usuario : items.get(position).getUsuariosQueGustan()) {
-                    if (usuario.getUid() == user.getUid()) {
-                        likeado = true;
-                        userDislike = usuario;
-                    }
+        holder.botonLike.setOnClickListener(v -> {
+            boolean likeado = false;
+            Usuario userDislike = null;
+            for (Usuario usuario : items.get(position).getUsuariosQueGustan()) {
+                if (usuario.getUid().equals(user.getUid())) {
+                    likeado = true;
+                    userDislike = usuario;
                 }
-                if (likeado) {
-                    DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference("BaseDatos");
-                    items.get(position).getUsuariosQueGustan().remove(userDislike);
-                    mDatabase.child("Publicaciones").child(items.get(position).getId()).setValue(items.get(position));
-
-                } else {
-                    DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference("BaseDatos");
-                    items.get(position).getUsuariosQueGustan().add(new Usuario.Builder()
-                            .displayName(user.getDisplayName())
-                            .email(user.getEmail())
-                            .photoUrl(Objects.requireNonNull(user.getPhotoUrl()).toString())
-                            .uid(user.getUid())
-                            .create());
-                    mDatabase.child("Publicaciones").child(items.get(position).getId()).setValue(items.get(position));
-                }
+            }
+            if (likeado) {
+                items.get(position).getUsuariosQueGustan().remove(userDislike);
+                socialFacade.getPublications().child(items.get(position).getId()).setValue(items.get(position));
+            } else {
+                items.get(position).getUsuariosQueGustan().add(new Usuario.Builder()
+                        .displayName(user.getDisplayName())
+                        .email(user.getEmail())
+                        .photoUrl(Objects.requireNonNull(user.getPhotoUrl()).toString())
+                        .uid(user.getUid())
+                        .create());
+                socialFacade.getPublications().child(items.get(position).getId()).setValue(items.get(position));
             }
         });
 
-        cardViewPublication.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent newIntent = new Intent(view.getContext(), DetailPublicationActivity.class);
-                newIntent.putExtra("id", items.get(position).getId());
-                newIntent.putExtra("ACTIVITY_CALLED_NAME", ACTIVITY_NAME);
-                newIntent.putExtra("USER_ID", items.get(position).getUsuario().getUid());
-                newIntent.putExtra("USER", items.get(position).getUsuario());
-                view.getContext().startActivity(newIntent);
-            }
+        cardViewPublication.setOnClickListener(v -> {
+            Intent newIntent = new Intent(view.getContext(), DetailPublicationActivity.class);
+            newIntent.putExtra("id", items.get(position).getId());
+            newIntent.putExtra("ACTIVITY_CALLED_NAME", ACTIVITY_NAME);
+            newIntent.putExtra("USER_ID", items.get(position).getUsuario().getUid());
+            newIntent.putExtra("USER", items.get(position).getUsuario());
+            view.getContext().startActivity(newIntent);
         });
 
-        userPublicationClick.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //Toast.makeText(view.getContext(), "Profile Clicked", Toast.LENGTH_SHORT).show();
-                Intent newIntent2 = new Intent(view.getContext(), ProfileActivity.class);
-                newIntent2.putExtra("ACTIVITY_CALLED_NAME", ACTIVITY_NAME);
-                newIntent2.putExtra("USER_ID", items.get(position).getUsuario().getUid());
-                newIntent2.putExtra("USER", items.get(position).getUsuario());
-                view.getContext().startActivity(newIntent2);
-            }
+        userPublicationClick.setOnClickListener(v -> {
+            Intent newIntent2 = new Intent(view.getContext(), ProfileActivity.class);
+            newIntent2.putExtra("ACTIVITY_CALLED_NAME", ACTIVITY_NAME);
+            newIntent2.putExtra("USER_ID", items.get(position).getUsuario().getUid());
+            newIntent2.putExtra("USER", items.get(position).getUsuario());
+            view.getContext().startActivity(newIntent2);
         });
     }
 

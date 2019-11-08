@@ -11,6 +11,8 @@ public class Mensaje {
     private String photoUrl;
     private String message_type;
 
+    public Mensaje() {
+    }
 
     private Mensaje(final Builder builder) {
         this.SenderUID = builder.SenderUID;

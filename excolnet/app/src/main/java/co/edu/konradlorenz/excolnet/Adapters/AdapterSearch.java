@@ -19,18 +19,38 @@ import java.util.ArrayList;
 
 import co.edu.konradlorenz.excolnet.Activities.ProfileActivity;
 import co.edu.konradlorenz.excolnet.Entities.Usuario;
+import co.edu.konradlorenz.excolnet.Factory.Adapter;
 import co.edu.konradlorenz.excolnet.R;
 
-public class AdapterSearch extends RecyclerView.Adapter<AdapterSearch.MyViewHolder> {
+public class AdapterSearch extends RecyclerView.Adapter<AdapterSearch.MyViewHolder>  implements Adapter {
     private ArrayList<Usuario> list;
     private Context context;
     private LinearLayout friendSearched;
     private View view;
     private String ACTIVITY_NAME = "AdapterSearch";
 
+    public AdapterSearch() {
+    }
+
     public AdapterSearch(Context context, ArrayList<Usuario> list) {
         this.context = context;
         this.list = list;
+    }
+
+    public ArrayList<Usuario> getList() {
+        return list;
+    }
+
+    public void setList(ArrayList<Usuario> list) {
+        this.list = list;
+    }
+
+    public Context getContext() {
+        return context;
+    }
+
+    public void setContext(Context context) {
+        this.context = context;
     }
 
     @NonNull
@@ -46,15 +66,12 @@ public class AdapterSearch extends RecyclerView.Adapter<AdapterSearch.MyViewHold
         holder.name.setText(list.get(position).getDisplayName());
         Glide.with(context).load(list.get(position).getPhotoUrl()).apply(RequestOptions.circleCropTransform()).into(holder.image);
 
-        friendSearched.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intentSearch = new Intent(view.getContext(), ProfileActivity.class);
-                intentSearch.putExtra("ACTIVITY_CALLED_NAME", ACTIVITY_NAME);
-                intentSearch.putExtra("USER_ID", list.get(position).getUid());
-                intentSearch.putExtra("USER", list.get(position));
-                view.getContext().startActivity(intentSearch);
-            }
+        friendSearched.setOnClickListener(v -> {
+            Intent intentSearch = new Intent(view.getContext(), ProfileActivity.class);
+            intentSearch.putExtra("ACTIVITY_CALLED_NAME", ACTIVITY_NAME);
+            intentSearch.putExtra("USER_ID", list.get(position).getUid());
+            intentSearch.putExtra("USER", list.get(position));
+            view.getContext().startActivity(intentSearch);
         });
 
     }

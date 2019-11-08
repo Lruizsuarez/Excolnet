@@ -32,7 +32,10 @@ import co.edu.konradlorenz.excolnet.Adapters.CommentAdapter;
 import co.edu.konradlorenz.excolnet.Entities.Comentario;
 import co.edu.konradlorenz.excolnet.Entities.Publicacion;
 import co.edu.konradlorenz.excolnet.Entities.Usuario;
+import co.edu.konradlorenz.excolnet.Factory.AdapterEnum;
+import co.edu.konradlorenz.excolnet.Factory.AdapterFactory;
 import co.edu.konradlorenz.excolnet.R;
+import co.edu.konradlorenz.excolnet.Repository.HomeFacade;
 
 public class DetailPublicationActivity extends AppCompatActivity {
 
@@ -40,7 +43,7 @@ public class DetailPublicationActivity extends AppCompatActivity {
     EditText comentario;
     Button botonComentar;
     private RecyclerView items;
-    private RecyclerView.Adapter mAdapter;
+    private CommentAdapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
     private TextView userName;
     private TextView publicationDate;
@@ -49,7 +52,7 @@ public class DetailPublicationActivity extends AppCompatActivity {
     private ImageView userImage;
     private ImageView publicationImage;
     private FirebaseUser user;
-    private DatabaseReference mDatabase;
+    private HomeFacade homeFacade;
 
     private TextView cantidadComentarios;
     private TextView cantidadLikes;
@@ -58,13 +61,11 @@ public class DetailPublicationActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail_publication);
-
         firebaseLoadData();
         setUpToolbar();
         findMaterialElements();
-
-
         setUpLayoutData();
+        homeFacade = new HomeFacade();
     }
 
     private void setUpToolbar() {
@@ -86,7 +87,6 @@ public class DetailPublicationActivity extends AppCompatActivity {
     private void firebaseLoadData() {
         FirebaseAuth mAuth = FirebaseAuth.getInstance();
         user = mAuth.getCurrentUser();
-        mDatabase = FirebaseDatabase.getInstance().getReference("BaseDatos");
     }
 
     private void setUpLayoutData() {
@@ -94,7 +94,7 @@ public class DetailPublicationActivity extends AppCompatActivity {
 
         String id = Objects.requireNonNull(getIntent().getExtras()).getString("id");
         assert id != null;
-        mDatabase.child("Publicaciones").child(id).addValueEventListener(new ValueEventListener() {
+        homeFacade.getPublicationById(id).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 publicacion = dataSnapshot.getValue(Publicacion.class);
@@ -120,34 +120,32 @@ public class DetailPublicationActivity extends AppCompatActivity {
                 mLayoutManager = new LinearLayoutManager(getApplicationContext());
                 items.setLayoutManager(mLayoutManager);
 
-                // specify an adapter (see also next example)
-                mAdapter = new CommentAdapter(comentarios, getApplicationContext());
+                mAdapter = (CommentAdapter) AdapterFactory.getAdapter(AdapterEnum.COMENTARIOS);
+                mAdapter.setItems(comentarios);
+                mAdapter.setContext(getApplicationContext());
                 items.setAdapter(mAdapter);
 
-                botonComentar.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if (comentario.getText().toString() != "") {
-                            String pattern = "yyyy-MM-dd";
-                            SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
-                            String date = simpleDateFormat.format(new Date());
-                            Usuario newUser = new Usuario.Builder()
-                                    .displayName(user.getDisplayName())
-                                    .email(user.getEmail())
-                                    .photoUrl(Objects.requireNonNull(user.getPhotoUrl()).toString())
-                                    .uid(user.getUid())
-                                    .create();
+                botonComentar.setOnClickListener(v -> {
+                    if (comentario.getText().toString() != "") {
+                        String pattern = "yyyy-MM-dd";
+                        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
+                        String date = simpleDateFormat.format(new Date());
+                        Usuario newUser = new Usuario.Builder()
+                                .displayName(user.getDisplayName())
+                                .email(user.getEmail())
+                                .photoUrl(Objects.requireNonNull(user.getPhotoUrl()).toString())
+                                .uid(user.getUid())
+                                .create();
 
-                            publicacion.getComentarios().add(new Comentario.Builder()
-                                    .usuario(newUser)
-                                    .texto(comentario.getText().toString())
-                                    .fechaComentario(date)
-                                    .create());
+                        publicacion.getComentarios().add(new Comentario.Builder()
+                                .usuario(newUser)
+                                .texto(comentario.getText().toString())
+                                .fechaComentario(date)
+                                .create());
 
-                            DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference("BaseDatos");
-                            mDatabase.child("Publicaciones").child(publicacion.getId()).setValue(publicacion);
-                            comentario.setText("");
-                        }
+                        DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference("BaseDatos");
+                        mDatabase.child("Publicaciones").child(publicacion.getId()).setValue(publicacion);
+                        comentario.setText("");
                     }
                 });
             }
